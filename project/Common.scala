@@ -10,7 +10,7 @@ object Common {
 
   //Common Settings
   val useScalaVersion: String = "2.12.8"
-  val useOrganization: String = "myorg"
+  val useOrganization: String = "com.zeab"
 
   //Get the current build time since epoch
   val buildTime: String = Instant.now.getEpochSecond.toString
