@@ -2,10 +2,12 @@ package com.zeab.kickerclicker.snrks
 
 import java.awt.Robot
 import java.awt.event.KeyEvent
+import java.net.URL
 
 import akka.actor.{Actor, PoisonPill}
 import com.zeab.kickerclicker.utilities.ThreadLocalRandom
 import org.openqa.selenium.firefox.{FirefoxDriver, FirefoxOptions}
+import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.{By, WebDriver, WebElement}
 
 import scala.concurrent.ExecutionContext
@@ -27,7 +29,8 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
   //Set Firefox Headless mode as TRUE
   val options: FirefoxOptions = new FirefoxOptions
   //options.setHeadless(true)
-  val firefox: WebDriver = new FirefoxDriver(options) //new RemoteWebDriver(new URL(s"http://192.168.1.144:4444/wd/hub"), options)
+  val firefox: WebDriver = new RemoteWebDriver(new URL(s"http://192.168.1.144:4444/wd/hub"), options)
+  //new FirefoxDriver(options) //
   val url: String = s"https://www.nike.com/launch/t/$name"
   firefox.get(url)
 

@@ -23,18 +23,17 @@ object KickerClicker extends App {
   val name: String = System.getenv("SHOE_NAME")
   val size: String = System.getenv("SHOE_SIZE")
   val isMale: Boolean = System.getenv("IS_MALE").contains("true")
-
-  system.actorOf(Props(classOf[SnrksMonitor], name, size, isMale, false))
-
+  
   //what about when do we actually start the bot going?
   val today: Calendar = Calendar.getInstance()
+  today.set(Calendar.DAY_OF_WEEK_IN_MONTH, 20)
   today.set(Calendar.HOUR_OF_DAY, 6)
-  today.set(Calendar.MINUTE, 58)
+  today.set(Calendar.MINUTE, 30)
   today.set(Calendar.SECOND, 0)
   val timer: Timer = new Timer()
   val task: TimerTask = new TimerTask() {
     override def run(): Unit = {
-      //system.actorOf(Props(classOf[SnrksMonitor], name, size, isMale, false))
+      system.actorOf(Props(classOf[SnrksMonitor], name, size, isMale, false))
     }
   }
   timer.schedule(task, today.getTime, TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS))
