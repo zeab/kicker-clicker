@@ -16,17 +16,17 @@ object KickerClicker extends App {
   System.setProperty("webdriver.gecko.driver", System.getenv("DRIVER_LOCATION"))
 
   //Actor System Stuff
-  implicit val system: ActorSystem = ActorSystem("Shoes", ConfigFactory.load())
+  implicit val system: ActorSystem = ActorSystem("Kicker-Clicker", ConfigFactory.load())
   implicit val mat: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContext = system.dispatcher
 
   val name: String = System.getenv("SHOE_NAME")
   val size: String = System.getenv("SHOE_SIZE")
   val isMale: Boolean = System.getenv("IS_MALE").contains("true")
-  
+
   //what about when do we actually start the bot going?
   val today: Calendar = Calendar.getInstance()
-  today.set(Calendar.DAY_OF_WEEK_IN_MONTH, 20)
+  today.set(Calendar.DAY_OF_WEEK_IN_MONTH, 22)
   today.set(Calendar.HOUR_OF_DAY, 6)
   today.set(Calendar.MINUTE, 30)
   today.set(Calendar.SECOND, 0)
