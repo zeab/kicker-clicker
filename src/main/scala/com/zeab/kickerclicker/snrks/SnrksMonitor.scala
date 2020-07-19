@@ -3,7 +3,7 @@ package com.zeab.kickerclicker.snrks
 import java.awt.Robot
 import java.awt.event.KeyEvent
 
-import akka.actor.Actor
+import akka.actor.{Actor, PoisonPill}
 import com.zeab.kickerclicker.utilities.ThreadLocalRandom
 import org.openqa.selenium.firefox.{FirefoxDriver, FirefoxOptions}
 import org.openqa.selenium.{By, WebDriver, WebElement}
@@ -11,6 +11,7 @@ import org.openqa.selenium.{By, WebDriver, WebElement}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
+import scala.collection.JavaConverters._
 
 class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boolean) extends Actor {
 
@@ -21,6 +22,7 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
   //TODO Need to hook these up correctly
   val username: String = System.getenv("EMAIL")
   val password: String = System.getenv("PASSWORD")
+  val cvv: String = System.getenv("CV")
 
   //Set Firefox Headless mode as TRUE
   val options: FirefoxOptions = new FirefoxOptions
@@ -107,19 +109,50 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
       buttonClick(
         "//button[contains(.,'Checkout')]",
         Checkout,
-        SubmitOrder,
+        EnterCVV,
         "unable to find checkout button",
         "clicking the checkout button"
       )
-    case SubmitOrder =>
-      Try(firefox.findElement(By.xpath("//button[contains(.,'Submit Order')]"))) match {
+    case EnterCVV =>
+      Try(firefox.findElements(By.tagName("iframe"))) match {
         case Failure(exception) =>
-          context.system.scheduler.scheduleOnce(4.second)(self ! SubmitOrder)
+          println("cant find any iframes")
+          context.system.scheduler.scheduleOnce(ThreadLocalRandom.getRandomInt(1000, 500).milli)(self ! PlaceOrder)
+        case Success(iFrames) =>
+          val foundOrNot =
+            iFrames.asScala.toList.map { element =>
+            println("trying to switch to element")
+            Try(firefox.switchTo().frame(element))
+            println("trying to find cv number input")
+            Try(firefox.findElement(By.xpath("//*[@id='cvNumber']"))) match {
+              case Failure(exception) =>
+                println("cant find cv")
+                Try(firefox.switchTo().defaultContent())
+                false
+              case Success(hy) =>
+                println("found cv")
+                hy.sendKeys(cvv)
+                Try(firefox.switchTo().defaultContent())
+                true
+            }
+          }.filter(_ == true)
+          if (foundOrNot.nonEmpty) context.system.scheduler.scheduleOnce(4000.milli)(self ! PlaceOrder)
+          else context.system.scheduler.scheduleOnce(1000.milli)(self ! EnterCVV)
+      }
+    case PlaceOrder =>
+      println("trying to find place order button")
+      Try(firefox.findElement(By.xpath("//button[contains(.,'Place Order')]"))) match {
+        case Failure(exception) =>
+          context.system.scheduler.scheduleOnce(4.second)(self ! PlaceOrder)
           println("unable to find submit order button")
         case Success(button) =>
           println("clicking the submit order button")
         //button.click()
+          context.system.scheduler.scheduleOnce(ThreadLocalRandom.getRandomInt(1000, 500).milli)(self ! End)
       }
+    case End =>
+      println("this is the song that never ends... it goes on and on my friends")
+      self ! PoisonPill
   }
 
   def buttonClick[A, B](
@@ -143,6 +176,7 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
           case Failure(exception: Throwable) =>
             context.system.log.debug(exception.toString)
             println(failureMessage)
+            context.system.scheduler.scheduleOnce(failureWait.second)(self ! retry)
           case Success(_) =>
             context.system.scheduler.scheduleOnce(ThreadLocalRandom.getRandomInt(successWaitMax, successWaitMin).milli)(self ! continue)
         }
@@ -170,6 +204,7 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
           case Failure(exception: Throwable) =>
             context.system.log.error(exception.toString)
             println(failureMessage)
+            context.system.scheduler.scheduleOnce(failureWait.second)(self ! retry)
           case Success(_) =>
             context.system.scheduler.scheduleOnce(ThreadLocalRandom.getRandomInt(successWaitMax, successWaitMin).milli)(self ! continue)
         }
@@ -180,7 +215,9 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
     else self ! Login
   }
 
-  case object SubmitOrder
+  case object End
+
+  case object PlaceOrder
 
   case object SignIn
 
@@ -199,5 +236,7 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
   case object FindNotifyButton
 
   case object Login
+
+  case object EnterCVV
 
 }

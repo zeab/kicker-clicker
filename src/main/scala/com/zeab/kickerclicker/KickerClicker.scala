@@ -34,7 +34,7 @@ object KickerClicker extends App {
   val timer: Timer = new Timer()
   val task: TimerTask = new TimerTask() {
     override def run(): Unit = {
-      system.actorOf(Props(classOf[SnrksMonitor], name, size, isMale, false))
+      //system.actorOf(Props(classOf[SnrksMonitor], name, size, isMale, false))
     }
   }
   timer.schedule(task, today.getTime, TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS))
