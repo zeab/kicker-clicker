@@ -26,11 +26,9 @@ object Dependencies {
 
   //List of Dependencies
   val D = new {
-
-    val javaNetHttpClientFull       = "com.sbux" %% "javanethttpclientfull" % V.javaNetHttpClientFull
-    val sel = "org.seleniumhq.selenium" % "selenium-java" % V.sel
-    val selF = "org.seleniumhq.selenium" % "selenium-firefox-driver" % V.sel
-
+    //Selenium
+    val sel                         = "org.seleniumhq.selenium" % "selenium-java" % V.sel
+    val selF                        = "org.seleniumhq.selenium" % "selenium-firefox-driver" % V.sel
     //Akka
     val akkaStream                  = "com.typesafe.akka" %% "akka-stream" % V.akka
     //Akka Http
@@ -50,7 +48,10 @@ object Dependencies {
   val rootDependencies: Seq[ModuleID] = Seq(
     D.akkaStream,
     D.sel,
-    D.selF,
+    D.akkaHttp,
+    D.circeCore,
+    D.circeParser,
+    D.akkaHttpCirce,
     D.scalaTest
   )
 

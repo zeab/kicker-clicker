@@ -1,0 +1,14 @@
+
+
+/user
+  GET
+  GET\$id
+  POST
+  PUT\$id
+
+/drop
+  GET
+  GET\$id
+  POST
+  PUT\$id
+

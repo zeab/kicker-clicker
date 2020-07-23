@@ -15,21 +15,16 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 import scala.collection.JavaConverters._
 
-class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boolean) extends Actor {
+class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boolean, username: String, password: String, cv: String) extends Actor {
 
   //TODO Add some more validation along the way like making sure im actually on the page and step that i actually think im on
 
   implicit val ec: ExecutionContext = context.system.dispatcher
 
-  //TODO Need to hook these up correctly
-  val username: String = System.getenv("EMAIL")
-  val password: String = System.getenv("PASSWORD")
-  val cvv: String = System.getenv("CV")
-
   //Set Firefox Headless mode as TRUE
   val options: FirefoxOptions = new FirefoxOptions
   //options.setHeadless(true)
-  val firefox: WebDriver = new RemoteWebDriver(new URL(s"http://192.168.1.144:4444/wd/hub"), options)
+  val firefox: WebDriver = new FirefoxDriver(options)//new RemoteWebDriver(new URL(s"http://192.168.1.144:4444/wd/hub"), options)
   //new FirefoxDriver(options) //
   val url: String = s"https://www.nike.com/launch/t/$name"
   firefox.get(url)
@@ -134,7 +129,7 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
                 false
               case Success(hy) =>
                 println("found cv")
-                hy.sendKeys(cvv)
+                hy.sendKeys(cv)
                 Try(firefox.switchTo().defaultContent())
                 true
             }
@@ -165,8 +160,8 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
                          failureMessage: String,
                          successMessage: String,
                          failureWait: Int = 4,
-                         successWaitMax: Int = 1000,
-                         successWaitMin: Int = 500
+                         successWaitMax: Int = 2000,
+                         successWaitMin: Int = 1000
                        ): Unit =
     Try(firefox.findElement(By.xpath(searchString))) match {
       case Failure(exception: Throwable) =>
@@ -193,8 +188,8 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
                    failureMessage: String,
                    successMessage: String,
                    failureWait: Int = 4,
-                   successWaitMax: Int = 1000,
-                   successWaitMin: Int = 500
+                   successWaitMax: Int = 2000,
+                   successWaitMin: Int = 1000
                  ): Unit =
     Try(firefox.findElement(By.xpath(searchString))) match {
       case Failure(exception: Throwable) =>
@@ -213,10 +208,9 @@ class SnrksMonitor(name: String, size: String, isMale: Boolean, skipLogin: Boole
         }
     }
 
-  override def preStart(): Unit = {
+  override def preStart(): Unit =
     if (skipLogin) self ! LookForSize
     else self ! Login
-  }
 
   case object End
 
