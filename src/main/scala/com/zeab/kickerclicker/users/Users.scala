@@ -9,3 +9,7 @@ class Users extends Actor{
   }
 
 }
+
+object Users extends Users{
+  val users: List[(String, String, String)] = ???
+}

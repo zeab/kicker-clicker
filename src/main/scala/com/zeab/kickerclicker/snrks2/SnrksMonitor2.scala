@@ -29,3 +29,23 @@ class SnrksMonitor2(name: String, size: String, isMale: Boolean, email: String, 
   case object Start
 
 }
+
+
+//
+//actually i think i need to re think how i deploy the browers like how do i do it on mass for a
+//
+//
+//
+//shoe_name: String
+//shoe_sizes: List[String]
+//drop_date_time: ZonedDateTime
+//users: List[String]
+//
+//
+//what kinda respources so i actaully need...
+
+
+
+
+
+
