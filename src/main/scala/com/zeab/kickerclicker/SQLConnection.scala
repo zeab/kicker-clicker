@@ -12,7 +12,8 @@ object SQLConnection {
 
   def selectUsers(connection: Connection): List[(String, String, String)] ={
     val rs: ResultSet = connection.createStatement().executeQuery("SELECT email, password, cv FROM kicker.users")
-    def worker(resultSet: ResultSet, currentList: List[(String, String, String)] = List.empty): List[(String, String, String)] ={
+    @scala.annotation.tailrec
+    def worker(resultSet: ResultSet, currentList: List[(String, String, String)] = List.empty): List[(String, String, String)] =
       if(resultSet.next()) {
         val email: String = rs.getString("email")
         val password: String = rs.getString("password")
@@ -20,7 +21,6 @@ object SQLConnection {
         worker(resultSet, currentList ++ List((email, password, cv)))
       }
       else currentList
-    }
     worker(rs)
   }
 
