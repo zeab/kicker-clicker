@@ -10,8 +10,8 @@ object SQLConnection {
 
   val sqlConnection: Connection = DriverManager.getConnection(s"jdbc:mysql://$url:3306",user,password)
 
-  def selectUsers(connection: Connection): List[(String, String, String)] ={
-    val rs: ResultSet = connection.createStatement().executeQuery("SELECT email, password, cv FROM kicker.users")
+  def selectUsers: List[(String, String, String)] ={
+    val rs: ResultSet = sqlConnection.createStatement().executeQuery("SELECT email, password, cv FROM kicker.users")
     @scala.annotation.tailrec
     def worker(resultSet: ResultSet, currentList: List[(String, String, String)] = List.empty): List[(String, String, String)] =
       if(resultSet.next()) {

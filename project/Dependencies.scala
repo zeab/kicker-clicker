@@ -9,6 +9,7 @@ object Dependencies {
     val javaNetHttpClientFull       = "2.0.1"
     val mySql                       = "8.0.13"
     val sel                         = "3.141.59"
+    val apacheCommonIO              = "2.5"
 
     val akka                        = "2.5.22"
     val akkaHttp                    = "10.1.8"
@@ -26,6 +27,7 @@ object Dependencies {
 
   //List of Dependencies
   val D = new {
+    val apacheCommonIO              = "commons-io" % "commons-io" % V.apacheCommonIO
     val mySql                       = "mysql" % "mysql-connector-java" % V.mySql
     //Selenium
     val sel                         = "org.seleniumhq.selenium" % "selenium-java" % V.sel
@@ -47,6 +49,7 @@ object Dependencies {
   }
 
   val rootDependencies: Seq[ModuleID] = Seq(
+    D.apacheCommonIO,
     D.mySql,
     D.akkaStream,
     D.sel,
