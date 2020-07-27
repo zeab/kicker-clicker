@@ -6,8 +6,9 @@ import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import com.zeab.kickerclicker.httpservice.Routes
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 import scala.io.StdIn
+import scala.util.{Failure, Success}
 
 object KickerClicker extends App {
 
@@ -31,11 +32,7 @@ object KickerClicker extends App {
 //  }
 
   val bindingFuture = Http().bindAndHandle(Routes.route, "0.0.0.0", 7000)
-
   println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-  StdIn.readLine()
-  bindingFuture
-    .flatMap(_.unbind()) // trigger unbinding from the port
-    .onComplete(_ => system.terminate()) // and shutdown when done
+  bindingFuture.onComplete {_ => println("shutting down") }
 
 }
