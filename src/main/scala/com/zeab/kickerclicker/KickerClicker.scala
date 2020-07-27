@@ -9,30 +9,13 @@ import com.zeab.kickerclicker.httpservice.Routes
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Promise}
-import scala.io.StdIn
-import scala.util.{Failure, Success}
 
 object KickerClicker extends App {
-
-  //Set up stuff
-  //System.setProperty("webdriver.gecko.driver", System.getenv("DRIVER_LOCATION"))
 
   //Actor System Stuff
   implicit val system: ActorSystem = ActorSystem("Kicker-Clicker", ConfigFactory.load())
   implicit val mat: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContext = system.dispatcher
-
-  //val name = "womens-react-vision-pale-ivory"
-  //val name = "zoom-double-stacked-barely-volt"
-  //val name = "sb-dunk-low-pro-grateful-dead-opti-yellow"
-  //val name = "womens-air-vapormax-2020-flyknit-pure-platinum"
-  //val name = "air-force-1-drew-league"
-//  val name = "air-jordan-4-off-white-sail"
-//  val ports: Inclusive = 4440 to 4440
-//  ports.map{port =>
-//    system.actorOf(Props(classOf[SnrksMonitor3], "192.168.1.144", port, name))
-//  }
-
 
   val f = for { bindingFuture <- Http().bindAndHandle(Routes.route, "0.0.0.0", 7000)
                 waitOnFuture  <- Promise[Done].future }
