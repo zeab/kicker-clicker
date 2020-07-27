@@ -12,10 +12,10 @@ branches:
 notifications:
   email:
     recipients:
-      - youremail@abc.com
+      - pyrosrppltoo@gmail.com
 
 jdk:
   - openjdk8
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION test
+  - docker login -u="$DOCKER_USER" -p="$DOCKER_PASSWORD" && sbt dp-travis-ci
