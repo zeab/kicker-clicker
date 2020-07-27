@@ -1,5 +1,6 @@
 package com.zeab.kickerclicker.httpservice
 
+import java.time.ZonedDateTime
 import java.util.UUID
 
 import akka.actor.ActorSystem
@@ -10,6 +11,8 @@ import com.zeab.kickerclicker.snrks.{PostDropRequestBody, PostUser, PostUserResp
 import com.zeab.kickerclicker.sqlconnection.{PostDropResponse, SQLConnection}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import io.circe.generic.auto._
+
+import scala.util.{Failure, Success, Try}
 
 object Routes {
 
@@ -25,8 +28,18 @@ object Routes {
             decodeRequest {
               entity(as[PostDropRequestBody]) { req: PostDropRequestBody =>
                 val dropId: String = UUID.randomUUID().toString
-                SQLConnection.insertDrop(dropId, req.url, req.dateTime, req.monitorPeriod)
-                complete(StatusCodes.Created, PostDropResponse(dropId))
+                SQLConnection.selectDrops(url = Some(req.url)) match {
+                  case Nil =>
+                    Try(ZonedDateTime.parse(req.dateTime)) match {
+                      case Failure(_) =>
+                        complete(StatusCodes.InternalServerError, "date time is not valid")
+                      case Success(_) =>
+                        SQLConnection.insertDrop(dropId, req.url, req.dateTime, req.monitorPeriod)
+                        complete(StatusCodes.Created, PostDropResponse(dropId))
+                    }
+                  case ::(head, tl) =>
+                    complete(StatusCodes.InternalServerError, "already created a drop for that url")
+                }
               }
             }
           } ~

@@ -24,12 +24,14 @@ object SQLConnection {
     worker(rs)
   }
 
-  def selectDrops(id: Option[String] = None): List[SelectDrops] ={
+  def selectDrops(id: Option[String] = None, url: Option[String] = None): List[SelectDrops] ={
     val query: String =
-      id match {
-        case Some(foundId: String) =>
+      (id, url) match {
+        case (Some(foundId: String), _) =>
           s"SELECT id, url, dateTime, monitorPeriod FROM kicker.drops WHERE id = '$foundId'"
-        case None =>
+        case (_, Some(foundUrl: String)) =>
+          s"SELECT id, url, dateTime, monitorPeriod FROM kicker.drops WHERE url = '$foundUrl'"
+        case (None, None) =>
           "SELECT id, url, dateTime, monitorPeriod FROM kicker.drops"
       }
     val rs: ResultSet = sqlConnection.createStatement().executeQuery(query)
