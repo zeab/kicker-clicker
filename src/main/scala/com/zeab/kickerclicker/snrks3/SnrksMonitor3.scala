@@ -1,20 +1,18 @@
-package com.zeab.kickerclicker
+package com.zeab.kickerclicker.snrks3
 
-import java.awt.Robot
-import java.awt.event.KeyEvent
 import java.io.File
 import java.net.URL
 
-import scala.collection.JavaConverters._
-import akka.actor.{Actor, PoisonPill}
+import akka.actor.Actor
 import com.zeab.kickerclicker.utilities.ThreadLocalRandom
 import org.apache.commons.io.FileUtils
-import org.openqa.selenium.{By, OutputType, TakesScreenshot, WebDriver, WebElement}
-import org.openqa.selenium.firefox.{FirefoxDriver, FirefoxOptions}
+import org.openqa.selenium.firefox.FirefoxOptions
 import org.openqa.selenium.remote.RemoteWebDriver
+import org.openqa.selenium._
 
-import scala.concurrent.duration._
+import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 class SnrksMonitor3(host: String, port: Int, name: String) extends Actor{
