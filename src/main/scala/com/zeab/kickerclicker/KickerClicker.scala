@@ -1,12 +1,14 @@
 package com.zeab.kickerclicker
 
+import akka.Done
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import com.zeab.kickerclicker.httpservice.Routes
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Promise}
 import scala.io.StdIn
 import scala.util.{Failure, Success}
 
@@ -31,8 +33,13 @@ object KickerClicker extends App {
 //    system.actorOf(Props(classOf[SnrksMonitor3], "192.168.1.144", port, name))
 //  }
 
-  val bindingFuture = Http().bindAndHandle(Routes.route, "0.0.0.0", 7000)
-  println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
-  bindingFuture.onComplete {_ => println("shutting down") }
+
+  val f = for { bindingFuture <- Http().bindAndHandle(Routes.route, "0.0.0.0", 7000)
+                waitOnFuture  <- Promise[Done].future }
+    yield waitOnFuture
+  sys.addShutdownHook {
+    // cleanup logic
+  }
+  Await.ready(f, Duration.Inf)
 
 }
