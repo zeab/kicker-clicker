@@ -16,20 +16,12 @@ object Docker {
     val headlessFirefox: String = "selenium/standalone-firefox:3.141.59-20200525"
   }
 
-
   //docker run -d -p 4444:4444 --shm-size 2g selenium/standalone-firefox:3.141.59-20200525
-
-  //Base
-  val baseDockerSettings: Seq[Def.Setting[_]] = Seq(
-    dockerBaseImage := I.openjdk8Alpine,
-    dockerRepository := repo,
-    dockerUpdateLatest := true
-  )
 
   val rootDockerSettings: Seq[Def.Setting[_]] = Seq(
     dockerBaseImage := I.openjdk8Alpine,
     dockerRepository := repo,
-    dockerLabels := mapDockerLabels("shoes", rootVersion, buildTime),
+    dockerLabels := mapDockerLabels("kickerclicker", rootVersion, buildTime),
     dockerUpdateLatest := true
   )
 

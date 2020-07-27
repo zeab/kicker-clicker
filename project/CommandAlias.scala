@@ -6,7 +6,7 @@ object CommandAlias {
 
   //List all Publish Alias here
   val allPublishAlias: Seq[Def.Setting[_]] = Seq.empty
-  
+
   //List all Docker Alias here
   val allDockerAlias: Seq[Def.Setting[_]] = Seq.empty
 
