@@ -53,7 +53,9 @@ class Monitor(id: String, url: String, dateTime: String) extends Actor {
       firefox.getTitle match {
         case null =>
           takeScreenshot(id, x.getPath.replace('/', '-'), "error")
-          throw new Exception("the web title is null so i don't think we hit what we expected")
+          println("the web title is null so i don't think we hit what we expected")
+          //throw new Exception("the web title is null so i don't think we hit what we expected")
+          context.system.stop(self)
         case _ =>
           println("the site seems to be up so moving on to the next step")
           takeScreenshot(id, x.getPath.replace('/', '-'))
