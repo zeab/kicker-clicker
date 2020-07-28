@@ -1,1 +1,13 @@
+
+docker run -d -v /home/siddhartha/selenium:/selenium --name kickerclicker -p 7000:7000 -e MYSQL_USER='' -e MYSQL_PASSWORD='' -e MYSQL_URL='' zeab/kickerclicker:latest
+
+
+DROP TABLE `kicker`.`drops`;
+CREATE TABLE `kicker`.`drops` (id VARCHAR(50), url VARCHAR(200), dateTime VARCHAR(100), monitorPeriod VARCHAR(12));
+SELECT * FROM `kicker`.`drops`;
+
+INSERT INTO `kicker`.`drops` (id, url, password, cv)
+VALUES ('13ded89d-4cea-4454-9fda-48ed18eec8c2', '', '', '');
+
+
 CREATE TABLE `kicker`.`users` (id VARCHAR(20), email VARCHAR(20), password VARCHAR(20), cv VARCHAR(20));
