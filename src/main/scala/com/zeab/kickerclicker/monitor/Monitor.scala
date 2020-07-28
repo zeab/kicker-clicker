@@ -8,13 +8,13 @@ import java.util.{Date, Timer, TimerTask}
 
 import akka.actor.Actor
 import org.apache.commons.io.FileUtils
-import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
 import org.openqa.selenium.firefox.FirefoxOptions
 import org.openqa.selenium.remote.RemoteWebDriver
+import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 class Monitor(id: String, url: String, dateTime: String) extends Actor {
 
@@ -55,14 +55,15 @@ class Monitor(id: String, url: String, dateTime: String) extends Actor {
           takeScreenshot(id, x.getPath.replace('/', '-'), "error")
           println("the web title is null so i don't think we hit what we expected")
           //throw new Exception("the web title is null so i don't think we hit what we expected")
+          firefox.close()
           context.system.stop(self)
         case _ =>
           println("the site seems to be up so moving on to the next step")
           takeScreenshot(id, x.getPath.replace('/', '-'))
-          context.system.scheduler.scheduleOnce(30.second){self ! Refresh}
+          context.system.scheduler.scheduleOnce(30.second) (self ! Refresh)
       }
     case Refresh =>
-      if (count == 10){
+      if (count == 10) {
         println("closing up shop")
         firefox.close()
         context.system.stop(self)
@@ -71,7 +72,7 @@ class Monitor(id: String, url: String, dateTime: String) extends Actor {
         println("prep refresh")
         context.become(active(count + 1))
         takeScreenshot(id, x.getPath.replace('/', '-'))
-        context.system.scheduler.scheduleOnce(30.second){self ! Refresh}
+        context.system.scheduler.scheduleOnce(30.second) (self ! Refresh)
         println("refreshing")
         firefox.navigate().refresh()
       }
@@ -88,15 +89,15 @@ class Monitor(id: String, url: String, dateTime: String) extends Actor {
     }
   }
 
+  def takeScreenshot(id: String, name: String, suffix: String = "live")(implicit webDriver: WebDriver): Unit = {
+    val file: File = webDriver.asInstanceOf[TakesScreenshot].getScreenshotAs(OutputType.FILE)
+    FileUtils.copyFile(file, new File(s"/selenium/$id/${System.currentTimeMillis()}$name-$suffix.png"))
+  }
+
   case object Init
 
   case object OpenWebSite
 
   case object Refresh
-
-  def takeScreenshot(id: String, name: String, suffix: String = "live")(implicit webDriver: WebDriver): Unit ={
-    val file: File = webDriver.asInstanceOf[TakesScreenshot].getScreenshotAs(OutputType.FILE)
-    FileUtils.copyFile(file, new File(s"/selenium/$id/${System.currentTimeMillis()}$name-$suffix.png"))
-  }
 
 }
