@@ -3,10 +3,12 @@ package com.zeab.kickerclicker.httpservice
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import com.zeab.kickerclicker.KickerClicker.system
+import com.zeab.kickerclicker.monitor.Monitor
 import com.zeab.kickerclicker.snrks.{PostDropRequestBody, PostUser, PostUserResponse}
 import com.zeab.kickerclicker.sqlconnection.{PostDropResponse, SQLConnection}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
@@ -34,11 +36,12 @@ object Routes {
                       case Failure(_) =>
                         complete(StatusCodes.InternalServerError, "date time is not valid")
                       case Success(_) =>
+                        system.actorOf(Props(classOf[Monitor], dropId, req.url, req.dateTime))
                         SQLConnection.insertDrop(dropId, req.url, req.dateTime, req.monitorPeriod)
                         complete(StatusCodes.Created, PostDropResponse(dropId))
                     }
-                  case ::(head, tl) =>
-                    complete(StatusCodes.InternalServerError, "already created a drop for that url")
+                  case ::(selectedDrop, _) =>
+                    complete(StatusCodes.InternalServerError, s"already created a drop for that url: ${selectedDrop.id}")
                 }
               }
             }
