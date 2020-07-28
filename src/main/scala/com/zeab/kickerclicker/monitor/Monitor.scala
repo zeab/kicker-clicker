@@ -62,6 +62,7 @@ class Monitor(id: String, url: String, dateTime: String) extends Actor {
     case Refresh =>
       if (count == 10){
         println("closing up shop")
+        firefox.close()
         context.system.stop(self)
       }
       else {
