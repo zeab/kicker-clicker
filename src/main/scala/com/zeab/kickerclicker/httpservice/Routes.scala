@@ -7,9 +7,8 @@ import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import com.zeab.kickerclicker.KickerClicker.system
 import com.zeab.kickerclicker.monitor.Monitor
-import com.zeab.kickerclicker.snrks.{PostDropRequestBody, PostUser, PostUserResponse}
+import com.zeab.kickerclicker.snrks.PostDropRequestBody
 import com.zeab.kickerclicker.sqlconnection.{PostDropResponse, SQLConnection}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import io.circe.generic.auto._
