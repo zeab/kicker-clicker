@@ -79,13 +79,21 @@ class Monitor(id: String, url: String, dateTime: String) extends Actor {
   }
 
   override def preStart(): Unit = {
-    println(s"setting monitor for $dateTime")
+    println(s"starting $url monitor")
     Try(ZonedDateTime.parse(dateTime)) match {
       case Failure(exception: Throwable) => println(exception)
       case Success(actualStartDateTime: ZonedDateTime) =>
-        val timer: Timer = new Timer()
-        val task: TimerTask = new TimerTask() { override def run(): Unit = { self ! Init } }
-        timer.schedule(task, Date.from(actualStartDateTime.minusMinutes(5).toInstant), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS))
+        val now: ZonedDateTime = ZonedDateTime.now()
+        if (now.isBefore(actualStartDateTime.plusMinutes(10))) {
+          println(s"setting $url to start $actualStartDateTime")
+          val timer: Timer = new Timer()
+          val task: TimerTask = new TimerTask() { override def run(): Unit = { self ! Init } }
+          timer.schedule(task, Date.from(actualStartDateTime.toInstant), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS))
+        }
+        else {
+          println(s"drop has passed $url monitor for $actualStartDateTime not starting")
+          context.system.stop(self)
+        }
     }
   }
 
