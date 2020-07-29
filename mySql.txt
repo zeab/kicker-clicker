@@ -1,6 +1,7 @@
 
 docker run -d -v /home/siddhartha/selenium:/selenium --name kickerclicker -p 7000:7000 -e MYSQL_USER='' -e MYSQL_PASSWORD='' -e MYSQL_URL='' zeab/kickerclicker:latest
 
+docker run -d -p 4440:4444 --shm-size 2g selenium/standalone-firefox:3.141.59-20200525
 
 DROP TABLE `kicker`.`drops`;
 CREATE TABLE `kicker`.`drops` (id VARCHAR(50), url VARCHAR(200), dateTime VARCHAR(100), monitorPeriod VARCHAR(12));

@@ -3,12 +3,12 @@ package com.zeab.kickerclicker
 import java.time.ZonedDateTime
 
 import akka.Done
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import com.zeab.kickerclicker.httpservice.Routes
-import com.zeab.kickerclicker.monitor.Monitor
+import com.zeab.kickerclicker.monitor.MonitorFactory
 import com.zeab.kickerclicker.sqlconnection.{SQLConnection, SelectDrops}
 
 import scala.concurrent.duration.Duration
@@ -23,10 +23,10 @@ object KickerClicker extends App {
 
   //This is not elegant so I need to make it more so
   val allValidDrops: List[SelectDrops] =
-    SQLConnection.selectDrops().filter(drop => ZonedDateTime.parse(drop.dateTime).isAfter(ZonedDateTime.now().minusDays(1)))
+    SQLConnection.selectDrops().filter((drop: SelectDrops) => ZonedDateTime.parse(drop.dateTime).isAfter(ZonedDateTime.now().minusDays(1)))
 
   val monitors: List[ActorRef] =
-    allValidDrops.map(drop => system.actorOf(Props(classOf[Monitor], drop.id, drop.url, drop.dateTime)))
+    allValidDrops.map((drop: SelectDrops) => MonitorFactory.startMonitor(drop.id, drop.url, ZonedDateTime.parse(drop.dateTime)))
 
   val f = for { bindingFuture <- Http().bindAndHandle(Routes.route, "0.0.0.0", 7000)
                 waitOnFuture  <- Promise[Done].future }

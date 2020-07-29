@@ -3,12 +3,11 @@ package com.zeab.kickerclicker.httpservice
 import java.time.ZonedDateTime
 import java.util.UUID
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import com.zeab.kickerclicker.monitor.Monitor
-import com.zeab.kickerclicker.snrks.PostDropRequestBody
+import com.zeab.kickerclicker.monitor.MonitorFactory
 import com.zeab.kickerclicker.sqlconnection.{PostDropResponse, SQLConnection}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import io.circe.generic.auto._
@@ -35,9 +34,13 @@ object Routes {
                       case Failure(_) =>
                         complete(StatusCodes.InternalServerError, "date time is not valid format")
                       case Success(_) =>
-                        system.actorOf(Props(classOf[Monitor], dropId, req.url, req.dateTime))
-                        SQLConnection.insertDrop(dropId, req.url, req.dateTime, req.monitorPeriod)
-                        complete(StatusCodes.Created, PostDropResponse(dropId))
+                        Try(ZonedDateTime.parse(req.dateTime)) match {
+                          case Failure(_) => complete(StatusCodes.InternalServerError, s"datetime is not in the right format")
+                          case Success(goodDateTime: ZonedDateTime) =>
+                            MonitorFactory.startMonitor(dropId, req.url, goodDateTime)
+                            SQLConnection.insertDrop(dropId, req.url, req.dateTime, req.monitorPeriod)
+                            complete(StatusCodes.Created, PostDropResponse(dropId))
+                        }
                     }
                   case ::(selectedDrop, _) =>
                     complete(StatusCodes.InternalServerError, s"already created a drop for that url: ${selectedDrop.id}")

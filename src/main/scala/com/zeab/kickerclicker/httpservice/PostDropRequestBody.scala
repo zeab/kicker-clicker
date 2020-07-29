@@ -1,4 +1,4 @@
-package com.zeab.kickerclicker.snrks
+package com.zeab.kickerclicker.httpservice
 
 case class PostDropRequestBody(
                                 url: String,
