@@ -27,6 +27,7 @@ object Dependencies {
 
   //List of Dependencies
   val D = new {
+    val xml = "org.scala-lang.modules" %% "scala-xml" % V.scalaXML
     val apacheCommonIO              = "commons-io" % "commons-io" % V.apacheCommonIO
     val mySql                       = "mysql" % "mysql-connector-java" % V.mySql
     //Selenium
@@ -57,7 +58,8 @@ object Dependencies {
     D.circeCore,
     D.circeParser,
     D.akkaHttpCirce,
-    D.scalaTest
+    D.scalaTest,
+    D.xml
   )
 
 }

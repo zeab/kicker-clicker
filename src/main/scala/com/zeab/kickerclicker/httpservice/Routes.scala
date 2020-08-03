@@ -19,11 +19,6 @@ object Routes {
   val drops: Route =
     extractActorSystem { implicit system: ActorSystem =>
       path("drops") {
-        get {
-          parameters("id".?) { (id: Option[String]) =>
-            complete(StatusCodes.OK, SQLConnection.selectDrops(id))
-          }
-        } ~
           post {
             decodeRequest {
               entity(as[PostDropRequestBody]) { req: PostDropRequestBody =>
@@ -57,6 +52,6 @@ object Routes {
       }
     }
 
-  val route: Route = drops
+  val route: Route = drops ~ GetDrops.drops
 
 }

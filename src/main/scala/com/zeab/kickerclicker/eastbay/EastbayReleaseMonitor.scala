@@ -26,6 +26,7 @@ class EastbayReleaseMonitor extends Actor{
     }
 
   val url = "https://www.eastbay.com/release-dates.html"
+  //val url = "https://www.footlocker.com/release-dates"
 
   def receive: Receive = {
     case Start =>
@@ -65,6 +66,7 @@ class EastbayReleaseMonitor extends Actor{
                 }
                 else println("drop is already found so skipping insert")
               }
+              webDriver.close()
           }
       }
   }

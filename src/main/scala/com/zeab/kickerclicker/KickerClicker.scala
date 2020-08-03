@@ -10,6 +10,8 @@ import com.typesafe.config.ConfigFactory
 import com.zeab.kickerclicker.eastbay.EastbayReleaseMonitor
 import com.zeab.kickerclicker.httpservice.Routes
 import com.zeab.kickerclicker.monitor.MonitorFactory
+import com.zeab.kickerclicker.reebok.ReebokReleaseMonitor
+import com.zeab.kickerclicker.snrks.SnrksReleaseMonitor
 import com.zeab.kickerclicker.sqlconnection.{SQLConnection, SelectDrops}
 
 import scala.concurrent.duration.Duration
@@ -24,6 +26,8 @@ object KickerClicker extends App {
 
   //start the easy bay monitor
   system.actorOf(Props[EastbayReleaseMonitor])
+  system.actorOf(Props[SnrksReleaseMonitor])
+  //system.actorOf(Props[ReebokReleaseMonitor])
 
   //This is not elegant so I need to make it more so
   //val allValidDrops: List[SelectDrops] =
