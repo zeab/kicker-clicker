@@ -1,4 +1,4 @@
-package com.zeab.kickerclicker.easybay
+package com.zeab.kickerclicker.snrks
 
 import java.time.ZonedDateTime
 
@@ -19,9 +19,9 @@ class Snkrs(id: String, url: String, dropDateTime: ZonedDateTime) extends Actor 
 
   implicit val ec: ExecutionContext = context.system.dispatcher
 
-  def receive: Receive = init
+  def receive: Receive = startDriver
 
-  def init: Receive = {
+  def startDriver: Receive = {
     case Init =>
       Selenium.firefox("192.168.1.144", "4440") match {
         case Failure(exception: Throwable) =>
@@ -29,39 +29,20 @@ class Snkrs(id: String, url: String, dropDateTime: ZonedDateTime) extends Actor 
           context.stop(self)
         case Success(webDriver: RemoteWebDriver) =>
           implicit val wb: RemoteWebDriver = webDriver
-          println(s"$id-web driver is successful")
-          context.become(active)
+          println(s"$url $id web driver is successful")
+          context.become(openBrowser())
           self ! GetWebSite
       }
   }
 
-  def notify(count: Int = 0)(implicit webDriver: RemoteWebDriver): Receive = {
-    case LookForNotifyMe(buyingContainer: WebElement) =>
-      context.become(notify(count + 1))
-      if (count == 10) {
-        println(s"$url we hit 100 looks at the notify... stopping cause we don't know whats up")
-        webDriver.close()
-        context.stop(self)
-      }
-      else {
-        Try(buyingContainer.findElement(By.xpath(s"//button[contains(.,'Notify Me')]"))) match {
-          case Failure(_) =>
-            println(s"$url we did not find the notify me button")
-            context.become(active)
-            self ! LookForSoldOut(buyingContainer)
-          case Success(_) =>
-            println(s"$url look like its not on sale yet")
-            //TODO Add a counter to refresh the entire page if weve seen the notify to many times
-            context.system.scheduler.scheduleOnce(1.second)(self ! LookForNotifyMe(buyingContainer))
-        }
-      }
-  }
-
-  def active(implicit webDriver: RemoteWebDriver): Receive = {
+  def openBrowser(refreshCount: Int = 0)(implicit webDriver: RemoteWebDriver): Receive = {
     case GetWebSite =>
       webDriver.manage().window().maximize()
-      println(s"opening website $url")
+      println(s"$url opening website")
       webDriver.get(url)
+      self ! WaitForSiteToLoad
+    case WaitForSiteToLoad =>
+      println(s"refresh = $refreshCount")
       waitUntilPageLoaded(5, By.xpath("//div[contains(@class, 'buying-tools-container')]")) match {
         case Failure(exception) =>
           Selenium.takeScreenshot(id)
@@ -72,9 +53,46 @@ class Snkrs(id: String, url: String, dropDateTime: ZonedDateTime) extends Actor 
           Selenium.takeScreenshot(id)
           println(s"$url is up and loaded")
           self ! LookForNotifyMe(element)
+          context.become(active(refreshCount))
       }
+  }
+
+  def notify(watchCount: Int = 0, refreshCount: Int = 0)(implicit webDriver: RemoteWebDriver): Receive = {
     case LookForNotifyMe(buyingContainer: WebElement) =>
-      context.become(notify())
+      context.become(notify(watchCount + 1))
+      if (watchCount == 10) {
+        println(s"$url we hit 10 looks at the notify... lets refresh")
+        self ! Refresh
+      }
+      else {
+        Try(buyingContainer.findElement(By.xpath(s"//button[contains(.,'Notify Me')]"))) match {
+          case Failure(_) =>
+            println(s"$url we did not find the notify me button")
+            context.become(active(refreshCount))
+            self ! LookForSoldOut(buyingContainer)
+          case Success(_) =>
+            println(s"$url look like its not on sale yet")
+            context.system.scheduler.scheduleOnce(1.second)(self ! LookForNotifyMe(buyingContainer))
+        }
+      }
+    case Refresh =>
+      if ((refreshCount + 1) == 5){
+        println(s"$url closing up shop")
+        webDriver.close()
+        context.stop(self)
+      }
+      else{
+        println(s"$url refreshing")
+        webDriver.navigate().refresh()
+        context.become(openBrowser(refreshCount + 1))
+        self ! WaitForSiteToLoad
+      }
+  }
+
+  def active(refreshCount: Int = 0)(implicit webDriver: RemoteWebDriver): Receive = {
+    case LookForNotifyMe(buyingContainer: WebElement) =>
+      Selenium.takeScreenshot(id)
+      context.become(notify(refreshCount = refreshCount))
       self ! LookForNotifyMe(buyingContainer)
     case LookForSoldOut(buyingContainer: WebElement) =>
       Try(buyingContainer.findElement(By.xpath(s"//div[contains(.,'Sold Out')]"))) match {
@@ -139,5 +157,9 @@ class Snkrs(id: String, url: String, dropDateTime: ZonedDateTime) extends Actor 
   case class EnterDrawing(element: WebElement)
 
   case class AddToCart(element: WebElement)
+
+  case object Refresh
+
+  case object WaitForSiteToLoad
 
 }

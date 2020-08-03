@@ -38,7 +38,7 @@ object Routes {
                           case Failure(_) => complete(StatusCodes.InternalServerError, s"datetime is not in the right format")
                           case Success(goodDateTime: ZonedDateTime) =>
                             MonitorFactory.startMonitor(dropId, req.url, goodDateTime)
-                            SQLConnection.insertDrop(dropId, req.url, req.dateTime, req.monitorPeriod)
+                            SQLConnection.insertDrop(dropId, "" , "", req.url, req.dateTime, "", req.monitorPeriod)
                             complete(StatusCodes.Created, PostDropResponse(dropId))
                         }
                     }

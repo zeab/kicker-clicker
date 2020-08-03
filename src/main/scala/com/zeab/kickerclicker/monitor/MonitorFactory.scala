@@ -3,7 +3,7 @@ package com.zeab.kickerclicker.monitor
 import java.time.ZonedDateTime
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import com.zeab.kickerclicker.easybay.Snkrs
+import com.zeab.kickerclicker.snrks.Snkrs
 
 //TODO I hate all of this but i cant think of something better to call it
 
