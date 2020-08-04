@@ -35,22 +35,21 @@ object KickerClicker2 extends App {
   system.actorOf(Props[SnrksReleaseDates])
 
   //Read into the database and start Drop monitors
-  SQLConnection.selectDrops().map{ drop =>
-    Try(new URL(drop.url)) match {
-      case Failure(exception) =>
-        println(exception.toString)
-      case Success(url) =>
-        url.getHost match {
-          case "www.nike.com" =>
-            system.actorOf(Props(classOf[SnrksDrops], drop.id, drop.url, ZonedDateTime.parse(drop.dateTime)))
-          case "www.eastbay.com" =>
-            system.actorOf(Props(classOf[FootLockerDrops], drop.id, drop.url, ZonedDateTime.parse(drop.dateTime)))
-          case _ => println("no actor found")
-        }
-        println()
-    }
-
-  }
+//  SQLConnection.selectDrops().map{ drop =>
+//    Try(new URL(drop.url)) match {
+//      case Failure(exception) =>
+//        println(exception.toString)
+//      case Success(url) =>
+//        url.getHost match {
+//          case "www.nike.com" =>
+//            system.actorOf(Props(classOf[SnrksDrops], drop.id, drop.url, ZonedDateTime.parse(drop.dateTime)))
+//          case "www.eastbay.com" =>
+//            system.actorOf(Props(classOf[FootLockerDrops], drop.id, drop.url, ZonedDateTime.parse(drop.dateTime)))
+//          case _ => println("no actor found")
+//        }
+//        println()
+//    }
+//  }
 
   //Bind the routes to the port
   val httpService: Future[Http.ServerBinding] =
