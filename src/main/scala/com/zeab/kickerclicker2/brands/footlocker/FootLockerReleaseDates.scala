@@ -78,7 +78,7 @@ class FootLockerReleaseDates(subBrand: String) extends Actor {
 
           val knownDrops: List[DropsTable] = SQLConnection.selectDrops()
 
-          foundDrops.map { foundDrop: DropsTable =>
+          foundDrops.foreach { foundDrop: DropsTable =>
             if (knownDrops.exists(_.url == foundDrop.url))
               println("drop is already found so skipping insert")
             else {
@@ -86,6 +86,8 @@ class FootLockerReleaseDates(subBrand: String) extends Actor {
               SQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, "1", "0")
             }
           }
+
+          webDriver.quit()
       }
   }
 

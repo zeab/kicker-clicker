@@ -22,17 +22,28 @@ import scala.util.{Failure, Success, Try}
 
 object KickerClicker2 extends App {
 
+  val isLocal: Boolean = false
+
   //Actor System Stuff
   implicit val system: ActorSystem = ActorSystem("Kicker-Clicker", ConfigFactory.load())
   implicit val mat: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContext = system.dispatcher
 
   //Start Release Monitors
-  system.actorOf(Props[AdidasReleaseDates])
-  system.actorOf(Props(classOf[FootLockerReleaseDates], "footlocker"))
-  system.actorOf(Props(classOf[FootLockerReleaseDates], "eastbay"))
-  system.actorOf(Props[ReebokReleaseDates])
-  system.actorOf(Props[SnrksReleaseDates])
+  if (isLocal){
+    //system.actorOf(Props[AdidasReleaseDates])
+    //system.actorOf(Props(classOf[FootLockerReleaseDates], "footlocker"))
+    //system.actorOf(Props(classOf[FootLockerReleaseDates], "eastbay"))
+    //system.actorOf(Props[ReebokReleaseDates])
+    system.actorOf(Props(classOf[SnrksReleaseDates], None, None))
+  }
+  else{
+    //system.actorOf(Props[AdidasReleaseDates])
+    //system.actorOf(Props(classOf[FootLockerReleaseDates], "footlocker"))
+    //system.actorOf(Props(classOf[FootLockerReleaseDates], "eastbay"))
+    //system.actorOf(Props[ReebokReleaseDates])
+    system.actorOf(Props(classOf[SnrksReleaseDates], Some("192.168.1.144"), Some("4440")))
+  }
 
   //Read into the database and start Drop monitors
 //  SQLConnection.selectDrops().map{ drop =>

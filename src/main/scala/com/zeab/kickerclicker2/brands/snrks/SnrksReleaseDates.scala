@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-class SnrksReleaseDates extends Actor {
+class SnrksReleaseDates(host: Option[String], port: Option[String]) extends Actor {
 
   implicit val ec: ExecutionContext = context.system.dispatcher
 
@@ -27,14 +27,17 @@ class SnrksReleaseDates extends Actor {
 
   def openDriver: Receive = {
     case OpenDriver =>
-      Selenium.firefox("192.168.1.144", "4440") match {
-        case Failure(exception: Throwable) =>
-          println(exception)
-          context.system.stop(self)
-        case Success(webDriver: RemoteWebDriver) =>
-          context.become(openUrl(webDriver))
-          self ! OpenUrl
-      }
+      ((host, port) match {
+        case (Some(host: String), Some(port: String)) => Selenium.firefox(host, port)
+        case (_, _) => Selenium.firefox
+      }) match {
+      case Failure(exception: Throwable) =>
+        println(exception)
+        context.system.stop(self)
+      case Success(webDriver: RemoteWebDriver) =>
+        context.become(openUrl(webDriver))
+        self ! OpenUrl
+    }
   }
 
   def openUrl(webDriver: RemoteWebDriver): Receive = {
