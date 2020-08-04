@@ -1,4 +1,4 @@
-//package com.zeab.kickerclicker.eastbay
+//package com.zeab.kickerclicker.adidas
 //
 //import java.time.format.DateTimeFormatter
 //import java.time.{LocalDate, ZoneId}
@@ -16,7 +16,7 @@
 //import scala.concurrent.duration._
 //import scala.util.{Failure, Success, Try}
 //
-//class EastbayReleaseMonitor extends Actor{
+//class AdidasReleaseMonitor extends Actor{
 //
 //  implicit val ec: ExecutionContext = context.system.dispatcher
 //
@@ -26,8 +26,6 @@
 //    }
 //
 //  val url = "https://www.adidas.com/us/release-dates"
-//  //val url = "https://www.eastbay.com/release-dates.html"
-//  //val url = "https://www.footlocker.com/release-dates"
 //
 //  def receive: Receive = {
 //    case Start =>

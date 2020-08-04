@@ -1,6 +1,6 @@
-package com.zeab.kickerclicker.sqlconnection
+package com.zeab.kickerclicker2.sqlconnection.tables
 
-case class SelectDrops(
+case class DropsTable(
                         id: String,
                         name: String,
                         color: String,
