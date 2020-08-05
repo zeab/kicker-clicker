@@ -1,4 +1,4 @@
-package com.zeab.kickerclicker2.util
+package com.zeab.kickerclicker3.app.util
 
 import java.time.{Clock, Instant, ZoneId, ZonedDateTime}
 import java.util.concurrent.{ThreadLocalRandom => JavaThreadLocalRandom}
