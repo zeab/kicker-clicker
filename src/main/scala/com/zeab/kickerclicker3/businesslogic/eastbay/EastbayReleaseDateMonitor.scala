@@ -1,4 +1,4 @@
-package com.zeab.kickerclicker3.businesslogic.snrks
+package com.zeab.kickerclicker3.businesslogic.eastbay
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
@@ -18,11 +18,11 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success, Try}
 
-class SnrksReleaseDateMonitor extends Actor {
+class EastbayReleaseDateMonitor extends Actor {
 
   implicit val ec: ExecutionContext = context.system.dispatcher
 
-  val url: String = "https://www.nike.com/launch?s=upcoming"
+  val url: String = "https://www.eastbay.com/release-dates.html"
 
   def receive: Receive = connectToWebDriver
 
@@ -33,7 +33,7 @@ class SnrksReleaseDateMonitor extends Actor {
           println(exception.toString)
           context.system.stop(self)
         case Success(webDriver: RemoteWebDriver) =>
-          println("snrks release monitor remote driver connected")
+          println("eastbay release monitor remote driver connected")
           context.become(openReleaseCalendar(webDriver))
           self ! GetUrl
       }
@@ -41,7 +41,7 @@ class SnrksReleaseDateMonitor extends Actor {
 
   def openReleaseCalendar(webDriver: RemoteWebDriver): Receive = {
     case GetUrl =>
-      println("snrks release monitor getting releases")
+      println("eastbay release monitor getting releases")
       webDriver.manage().window().maximize()
       webDriver.get(url)
       context.become(recordProductCards(webDriver))
@@ -50,7 +50,7 @@ class SnrksReleaseDateMonitor extends Actor {
 
   def recordProductCards(webDriver: RemoteWebDriver): Receive = {
     case RecordProductCards =>
-      Try(webDriver.findElements(By.xpath(s"//div[contains(@class,'product-card')]"))) match {
+      Try(webDriver.findElements(By.className("c-release-product-link"))) match {
         case Failure(exception: Throwable) =>
           println(exception.toString)
           webDriver.quit()
@@ -60,19 +60,14 @@ class SnrksReleaseDateMonitor extends Actor {
             productCards.asScala.toList
               .filterNot(_.getText == "")
               .map { productCard: WebElement =>
-                val text: Array[String] = productCard.getText.split("\n")
-                val month: String = text(0).toLowerCase()
-                val date: String = month.charAt(0).toUpper + month.substring(1) + " " + text(1)
+                val url: String = productCard.getAttribute("href")
+                val text: Array[String] = productCard.getText.split('\n')
+                val date: String = text(0)
                 val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d yyyy", Locale.US)
                 val localDate: LocalDate = LocalDate.parse(date + " 2020", formatter)
-                val actualReleaseDate: ZonedDateTime = localDate.atTime(7, 0).atZone(ZoneId.of("America/Los_Angeles"))
-                val name: String = text(2)
-                val color: String = text(3)
-                val url: String =
-                  Try(productCard.findElement(By.xpath(s".//a[contains(@class,'card-link')]"))) match {
-                    case Failure(_) => "can not find card link"
-                    case Success(cardLink: WebElement) => cardLink.getAttribute("href")
-                  }
+                val actualReleaseDate: ZonedDateTime = localDate.atTime(7, 0).atZone( ZoneId.of("America/Los_Angeles"))
+                val name: String = text(1)
+                val color: String = text(2)
                 DropsTable("", name, color, url, actualReleaseDate.toString, "1", "0")
               }
 
@@ -80,23 +75,23 @@ class SnrksReleaseDateMonitor extends Actor {
 
           foundDrops.foreach { foundDrop: DropsTable =>
             if (knownDrops.exists(_.url == foundDrop.url))
-              println("snrks drop is already found so skipping insert")
+              println("eastbay drop is already found so skipping insert")
             else {
-              println("snrks drop found inserting")
+              println("eastbay drop found inserting")
               val id: String = UUID.randomUUID().toString
               MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, "1", "0")
-              context.system.actorOf(Props(classOf[SnrksDropMonitor], id, foundDrop.url, foundDrop.dateTime))
+              context.system.actorOf(Props(classOf[EastbayDropMonitor], id, foundDrop.url, foundDrop.dateTime))
             }
           }
 
-          println("snrks release monitor complete sleeping for a few hours")
+          println("eastbay release monitor complete sleeping for a few hours")
           context.system.scheduler.scheduleOnce(4.hours)(self ! ConnectToWebDriver)
           webDriver.quit()
       }
   }
 
   override def preStart(): Unit = {
-    println("snrks release date monitor starting")
+    println("eastbay release date monitor starting")
     self ! ConnectToWebDriver
   }
 
