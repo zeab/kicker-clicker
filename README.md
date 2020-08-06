@@ -25,4 +25,5 @@ docker run -d -p 4444:4444 --shm-size 2g selenium/standalone-firefox:3.141.59-20
 
 
 //run kicker clicker
-docker run -d -v /home/siddhartha/selenium:/selenium --name kickerclicker -p 7000:7000 -e MYSQL_USER='' -e MYSQL_PASSWORD='' -e MYSQL_URL='' zeab/kickerclicker:latest
+docker run -d --name kickerclicker -p 7000:7000 -v /home/{user}/selenium:/selenium -e MYSQL_USER= -e MYSQL_PASSWORD= -e MYSQL_HOST= -e MYSQL_PORT= -e SELENIUM_REMOTE_DRIVER_HOST= -e SELENIUM_REMOTE_DRIVER_PORT= -e SELENIUM_SCREENSHOT_DIR= zeab/kickerclicker:latest
+

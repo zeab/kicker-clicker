@@ -16,7 +16,7 @@ object AppConf {
 
   //Selenium
   val seleniumScreenShotDir: String = System.getenv("SELENIUM_SCREENSHOT_DIR")
-  val seleniumWebDriverLoc: String = System.getenv("SELENIUM_WEB_DRIVER_LOC")
+  val seleniumWebDriver: String = System.getenv("SELENIUM_WEB_DRIVER")
   val seleniumRemoteDriverHost: String = System.getenv("SELENIUM_REMOTE_DRIVER_HOST")
   val seleniumRemoteDriverPort: String = System.getenv("SELENIUM_REMOTE_DRIVER_PORT")
 

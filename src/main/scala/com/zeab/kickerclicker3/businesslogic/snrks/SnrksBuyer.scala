@@ -3,12 +3,21 @@ package com.zeab.kickerclicker3.businesslogic.snrks
 import akka.actor.Actor
 import com.zeab.kickerclicker3.app.appconf.AppConf
 import com.zeab.kickerclicker3.app.selenium.{ConnectToWebDriver, GetUrl, Selenium}
+import com.zeab.kickerclicker3.app.util.ThreadLocalRandom
 import org.openqa.selenium.{By, WebElement}
 import org.openqa.selenium.remote.RemoteWebDriver
 
+import scala.collection.JavaConverters._
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success, Try}
 
 class SnrksBuyer(id: String, url: String, email: String, password: String, cv: String) extends Actor{
+
+  def screenShotDir: String =
+    s"${AppConf.seleniumScreenShotDir}/$id/$email/${System.currentTimeMillis()}.png"
+
+  implicit val ec: ExecutionContext = context.system.dispatcher
 
   def receive: Receive = connectToWebDriver
 
@@ -30,7 +39,7 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
     case GetUrl =>
       println(s"$email:$url connecting buy page")
       webDriver.get(url)
-      Selenium.takeScreenshot(webDriver, s"${AppConf.seleniumScreenShotDir}/$id/$email/${System.currentTimeMillis()}.png")
+      Selenium.takeScreenshot(webDriver, screenShotDir)
       context.become(lookForBuyingContainer(webDriver))
       self ! LookForBuyingContainer
   }
@@ -39,31 +48,83 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
     case LookForBuyingContainer =>
       Try(webDriver.findElement(By.xpath("//div[contains(@class, 'buying-tools-container')]"))) match {
         case Failure(exception: Throwable) =>
-          Selenium.takeScreenshot(webDriver, s"${AppConf.seleniumScreenShotDir}/$id/$email/${System.currentTimeMillis()}.png")
+          Selenium.takeScreenshot(webDriver, screenShotDir)
           println(exception.toString)
         case Success(buyingContainer: WebElement) =>
           println(s"$email:$url found the buying container")
-          Selenium.takeScreenshot(webDriver, s"${AppConf.seleniumScreenShotDir}/$id/$email/${System.currentTimeMillis()}.png")
-
-          //look for the amount of buttons and then based on that make an educated guess as to where we are at in the process
-          //if its 1 then its either notify me
-          //if there are 0 then its sold out
-          //if there are more then lets look for sizes
-
-          println()
+          Selenium.takeScreenshot(webDriver, screenShotDir)
+          val foundButtons: List[WebElement] = buyingContainer.findElements(By.tagName("button")).asScala.toList
+          foundButtons.size match {
+            case 0 =>
+              context.become(lookForSoldOut(buyingContainer, webDriver))
+              self ! LookForSoldOut
+            case 1 =>
+              context.become(lookForNotifyMe(buyingContainer, webDriver))
+              self ! LookForNotifyMe
+            case _ =>
+              context.become(lookForAvailableSizes(foundButtons, webDriver))
+              self ! LookForAvailableSizes
+          }
       }
   }
 
-  def lookForSoldOut(webDriver: RemoteWebDriver): Receive = {
-    case _ =>
+  def lookForSoldOut(buyingContainer: WebElement, webDriver: RemoteWebDriver): Receive = {
+    case LookForSoldOut =>
+      Try(buyingContainer.findElement(By.xpath(s".//div[contains(.,'Sold Out')]"))) match {
+        case Failure(exception: Throwable) =>
+          println(exception.toString)
+          Selenium.takeScreenshot(webDriver, screenShotDir)
+          context.become(lookForBuyingContainer(webDriver))
+          context.system.scheduler.scheduleOnce(2.second)(self ! LookForBuyingContainer)
+        case Success(_) =>
+          println("looks to be sold out sorry :(")
+          Selenium.takeScreenshot(webDriver, screenShotDir)
+          webDriver.quit()
+          context.stop(self)
+      }
   }
 
-  def lookForNotifyMe(webDriver: RemoteWebDriver): Receive = {
-    case _ =>
+  def lookForNotifyMe(buyingContainer: WebElement, webDriver: RemoteWebDriver): Receive = {
+    case LookForNotifyMe =>
+      Try(buyingContainer.findElement(By.xpath(s".//button[contains(.,'Notify Me')]"))) match {
+        case Failure(exception) =>
+          println(exception.toString)
+          context.become(lookForBuyingContainer(webDriver))
+          context.system.scheduler.scheduleOnce(2.second)(self ! LookForBuyingContainer)
+        case Success(_) =>
+          println("found notify me")
+          context.become(lookForBuyingContainer(webDriver))
+          context.system.scheduler.scheduleOnce(2.second)(self ! LookForBuyingContainer)
+      }
   }
 
-  def lookForAvailableSizes(webDriver: RemoteWebDriver): Receive = {
-    case _ =>
+  def lookForAvailableSizes(possibleSizes: List[WebElement], webDriver: RemoteWebDriver): Receive = {
+    case LookForAvailableSizes =>
+      //Find all the valid sizes
+      val availableSizes: List[WebElement] = possibleSizes.filter((button: WebElement) => button.isEnabled).filterNot(_.getText == "ADD TO CART").filterNot(_.getText == "Enter Drawing")
+      //Pick and click on the top size
+      val selectedSize: WebElement = ThreadLocalRandom.getRandomItemFromCollection(availableSizes)
+      println(s"clicking size: ${selectedSize.getText}")
+      selectedSize.click()
+      Selenium.takeScreenshot(webDriver, screenShotDir)
+
+      //Find the other possible buttons on the list
+      val addToCart: Option[WebElement] = possibleSizes.find(_.getText == "ADD TO CART")
+      val enterDrawing: Option[WebElement] = possibleSizes.find(_.getText == "Enter Drawing")
+
+      //What to do if those buttons are found so we know how to proceed
+      (addToCart, enterDrawing) match {
+        case (Some(cart: WebElement), None) =>
+          println("clicking add to cart")
+          cart.click()
+        case (None, Some(draw: WebElement)) =>
+          println("clicking enter drawing")
+          draw.click()
+        case (None, None) =>
+          println("cant find either the add to cart or enter drawing buttons")
+      }
+      Thread.sleep(4000)
+      Selenium.takeScreenshot(webDriver, screenShotDir)
   }
 
   def lookForEnterDrawing(webDriver: RemoteWebDriver): Receive = {
@@ -80,5 +141,11 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
   }
 
   case object LookForBuyingContainer
+
+  case object LookForSoldOut
+
+  case object LookForNotifyMe
+
+  case object LookForAvailableSizes
 
 }
