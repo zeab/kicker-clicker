@@ -17,7 +17,7 @@ INSERT INTO `kicker`.`drops`  (id, name, color, url, dateTime, wanted, monitorPe
 VALUES ('', '', '', '', '', '', '');
 
 //run local firefox
-docker run -d -p 4444:4444 --shm-size 2g selenium/standalone-firefox:3.141.59-20200525
+docker run -d -p 4440:4444 --shm-size 2g selenium/standalone-firefox:3.141.59-20200525
 
 
 

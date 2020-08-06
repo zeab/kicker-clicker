@@ -2,7 +2,7 @@ package com.zeab.kickerclicker3.businesslogic.snrks
 
 import akka.actor.Actor
 import com.zeab.kickerclicker3.app.appconf.AppConf
-import com.zeab.kickerclicker3.app.selenium.{ConnectToWebDriver, GetUrl, Selenium}
+import com.zeab.kickerclicker3.app.selenium.{ConnectToWebDriver, GetUrl, Refresh, Selenium}
 import com.zeab.kickerclicker3.app.util.ThreadLocalRandom
 import org.openqa.selenium.{By, WebElement}
 import org.openqa.selenium.remote.RemoteWebDriver
@@ -40,11 +40,11 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
       println(s"$email:$url connecting buy page")
       webDriver.get(url)
       Selenium.takeScreenshot(webDriver, screenShotDir)
-      context.become(lookForBuyingContainer(webDriver))
+      context.become(lookForBuyingContainer(webDriver, 0, 0))
       self ! LookForBuyingContainer
   }
 
-  def lookForBuyingContainer(webDriver: RemoteWebDriver): Receive = {
+  def lookForBuyingContainer(webDriver: RemoteWebDriver, retryCount: Int, refreshCount: Int): Receive = {
     case LookForBuyingContainer =>
       Try(webDriver.findElement(By.xpath("//div[contains(@class, 'buying-tools-container')]"))) match {
         case Failure(exception: Throwable) =>
@@ -56,26 +56,37 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
           val foundButtons: List[WebElement] = buyingContainer.findElements(By.tagName("button")).asScala.toList
           foundButtons.size match {
             case 0 =>
-              context.become(lookForSoldOut(buyingContainer, webDriver))
+              context.become(lookForSoldOut(buyingContainer, webDriver, retryCount, refreshCount))
               self ! LookForSoldOut
             case 1 =>
-              context.become(lookForNotifyMe(buyingContainer, webDriver))
+              context.become(lookForNotifyMe(buyingContainer, webDriver, retryCount, refreshCount))
               self ! LookForNotifyMe
             case _ =>
-              context.become(lookForAvailableSizes(foundButtons, webDriver))
+              context.become(lookForAvailableSizes(foundButtons, webDriver, retryCount, refreshCount))
               self ! LookForAvailableSizes
           }
       }
   }
 
-  def lookForSoldOut(buyingContainer: WebElement, webDriver: RemoteWebDriver): Receive = {
+  def lookForSoldOut(buyingContainer: WebElement, webDriver: RemoteWebDriver, retryCount: Int, refreshCount: Int): Receive = {
     case LookForSoldOut =>
       Try(buyingContainer.findElement(By.xpath(s".//div[contains(.,'Sold Out')]"))) match {
         case Failure(exception: Throwable) =>
           println(exception.toString)
           Selenium.takeScreenshot(webDriver, screenShotDir)
-          context.become(lookForBuyingContainer(webDriver))
-          context.system.scheduler.scheduleOnce(2.second)(self ! LookForBuyingContainer)
+          if (retryCount + 1 <= 5) {
+            context.become(lookForBuyingContainer(webDriver, retryCount + 1, refreshCount))
+            context.system.scheduler.scheduleOnce(2.second)(self ! LookForBuyingContainer)
+          }
+          else if (refreshCount + 1 == 5){
+            context.become(refresh(webDriver, retryCount, refreshCount))
+            context.system.scheduler.scheduleOnce(2.second)(self ! Refresh)
+          }
+          else {
+            println("we don't know whats happening at all so closing up shop")
+            webDriver.quit()
+            context.stop(self)
+          }
         case Success(_) =>
           println("looks to be sold out sorry :(")
           Selenium.takeScreenshot(webDriver, screenShotDir)
@@ -84,24 +95,24 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
       }
   }
 
-  def lookForNotifyMe(buyingContainer: WebElement, webDriver: RemoteWebDriver): Receive = {
+  def lookForNotifyMe(buyingContainer: WebElement, webDriver: RemoteWebDriver, retryCount: Int, refreshCount: Int): Receive = {
     case LookForNotifyMe =>
       Try(buyingContainer.findElement(By.xpath(s".//button[contains(.,'Notify Me')]"))) match {
         case Failure(exception) =>
           println(exception.toString)
-          context.become(lookForBuyingContainer(webDriver))
+          context.become(lookForBuyingContainer(webDriver, retryCount, refreshCount))
           context.system.scheduler.scheduleOnce(2.second)(self ! LookForBuyingContainer)
         case Success(_) =>
           println("found notify me")
-          context.become(lookForBuyingContainer(webDriver))
+          context.become(lookForBuyingContainer(webDriver, retryCount, refreshCount))
           context.system.scheduler.scheduleOnce(2.second)(self ! LookForBuyingContainer)
       }
   }
 
-  def lookForAvailableSizes(possibleSizes: List[WebElement], webDriver: RemoteWebDriver): Receive = {
+  def lookForAvailableSizes(possibleSizes: List[WebElement], webDriver: RemoteWebDriver, retryCount: Int, refreshCount: Int): Receive = {
     case LookForAvailableSizes =>
       //Find all the valid sizes
-      val availableSizes: List[WebElement] = possibleSizes.filter((button: WebElement) => button.isEnabled).filterNot(_.getText == "ADD TO CART").filterNot(_.getText == "Enter Drawing")
+      val availableSizes: List[WebElement] = possibleSizes.filter((button: WebElement) => button.isEnabled).filterNot(_.getText == "ADD TO CART").filterNot(_.getText.contains("Enter Drawing")).filterNot(_.getText.contains("BUY"))
       //Pick and click on the top size
       val selectedSize: WebElement = ThreadLocalRandom.getRandomItemFromCollection(availableSizes)
       println(s"clicking size: ${selectedSize.getText}")
@@ -133,6 +144,13 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
 
   def lookForAddToCart(webDriver: RemoteWebDriver): Receive = {
     case _ =>
+  }
+
+  def refresh(webDriver: RemoteWebDriver, retryCount: Int, refreshCount: Int): Receive ={
+    case Refresh =>
+      println("refreshing nav page because we don't know where we are")
+      webDriver.navigate().refresh()
+      context.become(lookForBuyingContainer(webDriver, retryCount, refreshCount + 1))
   }
 
   override def preStart(): Unit = {
