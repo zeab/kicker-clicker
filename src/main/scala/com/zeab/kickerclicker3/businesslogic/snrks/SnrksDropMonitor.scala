@@ -1,11 +1,39 @@
 package com.zeab.kickerclicker3.businesslogic.snrks
 
-import akka.actor.Actor
+import java.time.ZonedDateTime
+import java.util.concurrent.TimeUnit
+import java.util.{Date, Timer, TimerTask}
 
-class SnrksDropMonitor extends Actor {
+import akka.actor.{Actor, Props}
+import com.zeab.kickerclicker3.app.sqlconnection.MYSQLConnection
+import com.zeab.kickerclicker3.app.sqlconnection.tables.UserTable
 
-  override def receive: Receive = {
-    case _ =>
+class SnrksDropMonitor(id: String, url: String, dateTime: String) extends Actor{
+
+  def receive: Receive = {
+    case SpawnBuyers =>
+      println(s"spawning users for $url")
+      MYSQLConnection.selectUsers.foreach{ user: UserTable =>
+        println(s"buyer for ${user.email}")
+        context.actorOf(Props(classOf[SnrksBuyer], id, url, user.email, user.password, user.cv))
+      }
   }
+
+  override def preStart(): Unit = {
+    val now: ZonedDateTime = ZonedDateTime.now()
+    val dropDateTime: ZonedDateTime = ZonedDateTime.parse(dateTime)
+    if (now.isBefore(dropDateTime)) {
+      val timer: Timer = new Timer()
+      val task: TimerTask = new TimerTask() { override def run(): Unit = { self ! SpawnBuyers } }
+      println(s"setting $url to start buying at $dropDateTime")
+      timer.schedule(task, Date.from(dropDateTime.toInstant), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS))
+    }
+    else {
+      println(s"$url has passed the drop date time stopping drop monitor")
+      context.stop(self)
+    }
+  }
+
+  case object SpawnBuyers
 
 }

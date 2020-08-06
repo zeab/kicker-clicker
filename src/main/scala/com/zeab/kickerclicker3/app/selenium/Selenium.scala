@@ -1,9 +1,12 @@
 package com.zeab.kickerclicker3.app.selenium
 
+import java.io.File
 import java.net.URL
 
+import org.apache.commons.io.FileUtils
 import org.openqa.selenium.firefox.FirefoxOptions
 import org.openqa.selenium.remote.RemoteWebDriver
+import org.openqa.selenium.{OutputType, TakesScreenshot, WebDriver}
 
 import scala.util.Try
 
@@ -23,6 +26,11 @@ object Selenium {
     //options.addPreference("network.proxy.http_port", 7000)
     //options.addPreference("network.proxy.type", 1)
     Try(new RemoteWebDriver(new URL(s"http://$host:$port/wd/hub"), options))
+  }
+
+  def takeScreenshot(webDriver: WebDriver, outputDir: String): Unit = {
+    val file: File = webDriver.asInstanceOf[TakesScreenshot].getScreenshotAs(OutputType.FILE)
+    FileUtils.copyFile(file, new File(outputDir))
   }
 
 }

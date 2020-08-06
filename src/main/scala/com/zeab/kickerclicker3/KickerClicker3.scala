@@ -6,13 +6,13 @@ import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 import com.zeab.kickerclicker3.app.appconf.AppConf
 import com.zeab.kickerclicker3.app.sqlconnection.MYSQLConnection
-import com.zeab.kickerclicker3.businesslogic.Routes
 import com.zeab.kickerclicker3.businesslogic.footlocker.FootLockerReleaseDateMonitor
-import com.zeab.kickerclicker3.businesslogic.snrks.SnrksReleaseDateMonitor
+import com.zeab.kickerclicker3.businesslogic.http.Routes
+import com.zeab.kickerclicker3.businesslogic.snrks.{SnrksDropMonitor, SnrksReleaseDateMonitor}
 
+import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.sys.addShutdownHook
-import scala.concurrent.duration._
 
 object KickerClicker3 extends App {
 
@@ -27,9 +27,10 @@ object KickerClicker3 extends App {
   val footLockerReleaseDateMonitor: ActorRef =
     system.actorOf(Props(classOf[FootLockerReleaseDateMonitor]), "foot-locker-release-date-monitor")
 
-  //Start drop monitors
-  MYSQLConnection.selectDrops().foreach{ drop =>
-    //start a drop monitor which will deal with the filtering of stuff
+  MYSQLConnection.selectDrops().foreach{
+      case drop if drop.url.contains("www.nike.com") =>
+        system.actorOf(Props(classOf[SnrksDropMonitor], drop.id, drop.url, drop.dateTime))
+      case drop => println(s"${drop.url} is not supported yet")
   }
 
   //Bind the routes to the port

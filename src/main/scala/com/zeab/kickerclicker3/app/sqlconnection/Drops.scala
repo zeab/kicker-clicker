@@ -5,7 +5,6 @@ import java.sql.ResultSet
 import com.zeab.kickerclicker3.app.sqlconnection.MYSQLConnection.mySqlConnection
 import com.zeab.kickerclicker3.app.sqlconnection.tables.DropsTable
 
-
 trait Drops {
 
   def selectDrops(id: Option[String] = None, url: Option[String] = None): List[DropsTable] = {
