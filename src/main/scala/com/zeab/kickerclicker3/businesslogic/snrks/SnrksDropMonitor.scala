@@ -36,4 +36,9 @@ class SnrksDropMonitor(id: String, url: String, dateTime: String) extends Actor{
 
   case object SpawnBuyers
 
+  override def postRestart(reason: Throwable): Unit = {
+    println("an exception happened so lets just stop and figure out why ok :)")
+    context.stop(self)
+  }
+
 }

@@ -1,5 +1,6 @@
 package com.zeab.kickerclicker3.businesslogic.http
 
+import java.time.ZonedDateTime
 import java.util.UUID
 
 import akka.actor.Props
@@ -61,7 +62,7 @@ object Routes extends Directives with AutoDerivation with Marshallers with Unmar
             decodeRequest {
               entity(as[PostDropRequest]) { drop: PostDropRequest =>
                 val id: String = UUID.randomUUID().toString
-                MYSQLConnection.insertDrop(id, drop.name, drop.color, drop.url, drop.dateTime, "1", "0")
+                MYSQLConnection.insertDrop(id, drop.name, drop.color, drop.url, ZonedDateTime.parse(drop.dateTime).toInstant.getEpochSecond, isWanted = true)
                 drop match {
                   case drop if drop.url.contains("www.nike.com") =>
                     system.actorOf(Props(classOf[SnrksDropMonitor], id, drop.url, drop.dateTime))

@@ -135,11 +135,15 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
         case (None, None, Some(buy: WebElement)) =>
           println("clicking buy button")
           buy.click()
-        case (None, None, None) =>
+        case _ =>
           println("cant find either the add to cart or enter drawing buttons or buy buttons")
       }
-      Thread.sleep(4000)
-      Selenium.takeScreenshot(webDriver, screenShotDir)
+
+      context.system.scheduler.scheduleOnce(4.second){
+        Selenium.takeScreenshot(webDriver, screenShotDir)
+        webDriver.quit()
+        println("finished up as far as i can go")
+      }
   }
 
   def lookForEnterDrawing(webDriver: RemoteWebDriver): Receive = {
@@ -169,5 +173,10 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
   case object LookForNotifyMe
 
   case object LookForAvailableSizes
+
+  override def postRestart(reason: Throwable): Unit = {
+    println("an exception happened so lets just stop and figure out why ok :)")
+    context.stop(self)
+  }
 
 }

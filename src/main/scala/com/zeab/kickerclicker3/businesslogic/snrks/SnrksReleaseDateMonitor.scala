@@ -5,7 +5,8 @@ import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import java.util
 import java.util.{Locale, UUID}
 
-import akka.actor.{Actor, Props}
+import akka.actor.SupervisorStrategy.Stop
+import akka.actor.{Actor, OneForOneStrategy, Props, SupervisorStrategy}
 import com.zeab.kickerclicker3.app.appconf.AppConf
 import com.zeab.kickerclicker3.app.selenium.{ConnectToWebDriver, GetUrl, Selenium}
 import com.zeab.kickerclicker3.app.sqlconnection.MYSQLConnection
@@ -23,6 +24,11 @@ class SnrksReleaseDateMonitor extends Actor {
   implicit val ec: ExecutionContext = context.system.dispatcher
 
   val url: String = "https://www.nike.com/launch?s=upcoming"
+
+  override val supervisorStrategy: SupervisorStrategy =
+    OneForOneStrategy(maxNrOfRetries = 0, withinTimeRange = 1.minute) {
+      case _ => Stop
+    }
 
   def receive: Receive = connectToWebDriver
 
@@ -73,7 +79,7 @@ class SnrksReleaseDateMonitor extends Actor {
                     case Failure(_) => "can not find card link"
                     case Success(cardLink: WebElement) => cardLink.getAttribute("href")
                   }
-                DropsTable("", name, color, url, actualReleaseDate.toString, "1", "0")
+                DropsTable("", name, color, url, actualReleaseDate.toInstant.getEpochSecond, isWanted = true)
               }
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()
@@ -84,8 +90,8 @@ class SnrksReleaseDateMonitor extends Actor {
             else {
               println("snrks drop found inserting")
               val id: String = UUID.randomUUID().toString
-              MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, "1", "0")
-              context.system.actorOf(Props(classOf[SnrksDropMonitor], id, foundDrop.url, foundDrop.dateTime))
+              MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, isWanted = true)
+              //context.system.actorOf(Props(classOf[SnrksDropMonitor], id, foundDrop.url, foundDrop.dateTime))
             }
           }
 
@@ -98,6 +104,11 @@ class SnrksReleaseDateMonitor extends Actor {
   override def preStart(): Unit = {
     println("snrks release date monitor starting")
     self ! ConnectToWebDriver
+  }
+
+  override def postRestart(reason: Throwable): Unit = {
+    println("an exception happened so lets just stop and figure out why ok :)")
+    context.stop(self)
   }
 
   case object RecordProductCards

@@ -168,4 +168,9 @@ class EastbayBuyer(id: String, url: String, email: String, password: String, cv:
 
   case object LookForAvailableSizes
 
+  override def postRestart(reason: Throwable): Unit = {
+    println("an exception happened so lets just stop and figure out why ok :)")
+    context.stop(self)
+  }
+
 }

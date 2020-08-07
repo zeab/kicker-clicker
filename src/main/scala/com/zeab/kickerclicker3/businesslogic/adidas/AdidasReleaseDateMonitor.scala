@@ -108,7 +108,7 @@ class AdidasReleaseDateMonitor extends Actor {
                     case Failure(_) => "can not find card link"
                     case Success(cardLink: WebElement) => cardLink.getAttribute("href")
                   }
-                DropsTable("", name, color, url, actualReleaseDate.toString, "1", "0")
+                DropsTable("", name, color, url, actualReleaseDate.toInstant.getEpochSecond, isWanted = true)
               }
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()
@@ -119,7 +119,7 @@ class AdidasReleaseDateMonitor extends Actor {
             else {
               println("snrks drop found inserting")
               val id: String = UUID.randomUUID().toString
-              MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, "1", "0")
+              MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, isWanted = true)
               //context.system.actorOf(Props(classOf[SnrksDropMonitor], id, foundDrop.url, foundDrop.dateTime))
             }
           }
@@ -136,5 +136,10 @@ class AdidasReleaseDateMonitor extends Actor {
   }
 
   case object RecordProductCards
+
+  override def postRestart(reason: Throwable): Unit = {
+    println("an exception happened so lets just stop and figure out why ok :)")
+    context.stop(self)
+  }
 
 }

@@ -5,7 +5,6 @@ case class DropsTable(
                        name: String,
                        color: String,
                        url: String,
-                       dateTime: String,
-                       wanted: String,
-                       monitorPeriod: String
+                       dateTime: Long,
+                       isWanted: Boolean
                      )

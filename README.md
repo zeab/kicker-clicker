@@ -11,14 +11,18 @@ CREATE TABLE `kicker`.`users` (id VARCHAR(50), email VARCHAR(200), password VARC
 INSERT INTO `kicker`.`users`  (id, email, password, cv) VALUES ('', '', '', '');
 
 //Drops
-select * from `kicker`.`drops`;
+SELECT * FROM `kicker`.`drops`;
 CREATE TABLE `kicker`.`drops` (id VARCHAR(50), name VARCHAR(200), color VARCHAR(200), url VARCHAR(250), dateTime VARCHAR(100), wanted VARCHAR(2), monitorPeriod VARCHAR(12));
-INSERT INTO `kicker`.`drops`  (id, name, color, url, dateTime, wanted, monitorPeriod)
-VALUES ('', '', '', '', '', '', '');
+INSERT INTO `kicker`.`drops`  (id, name, color, url, dateTime, wanted, monitorPeriod) VALUES ('', '', '', '', '', '', '');
+DROP TABLE `kicker`.`drops`;
+
 
 //run local firefox
 docker run -d -p 4440:4444 --shm-size 2g selenium/standalone-firefox:3.141.59-20200525
 
+
+
+CREATE TABLE `kicker`.`drops` (id VARCHAR(50), name VARCHAR(200), color VARCHAR(200), url VARCHAR(250), dateTime VARCHAR(100), wanted VARCHAR(2));
 
 
 

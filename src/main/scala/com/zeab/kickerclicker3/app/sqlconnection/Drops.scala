@@ -26,21 +26,22 @@ trait Drops {
         val url: String = rs.getString("url")
         val name: String = rs.getString("name")
         val color: String = rs.getString("color")
-        val dateTime: String = rs.getString("dateTime")
-        val wanted: String = rs.getString("wanted")
-        val monitorPeriod: String = rs.getString("monitorPeriod")
-        worker(resultSet, currentList ++ List(DropsTable(id, name, color, url, dateTime, wanted, monitorPeriod)))
+        val dateTime: Long = rs.getLong("dateTime")
+        val isWanted: Boolean = rs.getBoolean("isWanted")
+        worker(resultSet, currentList ++ List(DropsTable(id, name, color, url, dateTime, isWanted)))
       }
       else currentList
 
     worker(rs)
   }
 
-  def insertDrop(id: String, name: String, color: String, url: String, dateTime: String, wanted: String, monitorPeriod: String): Unit =
-    mySqlConnection.createStatement().executeUpdate(s"INSERT INTO kicker.drops (id, name, color, url, dateTime, wanted, monitorPeriod) VALUES ('$id', '${name.replace("'", "")}', '$color', '$url', '$dateTime', '$wanted', '$monitorPeriod');") match {
+  def insertDrop(id: String, name: String, color: String, url: String, dateTime: Long, isWanted: Boolean): Unit = {
+    val removeBadCharsFromName: String = name.replace("'", "")
+    mySqlConnection.createStatement().executeUpdate(s"INSERT INTO kicker.drops (id, name, color, url, dateTime, isWanted) VALUES ('$id', '$removeBadCharsFromName', '$color', '$url', $dateTime, '$isWanted');") match {
       case 1 => println("the sql drop insert was successful")
       case _ => println("the drop sql insert does not seem to have been successful")
     }
+  }
 
   def deleteDrop(id: String): Unit =
     mySqlConnection.createStatement().executeUpdate(s"DELETE FROM kicker.drops WHERE id = '$id';") match {

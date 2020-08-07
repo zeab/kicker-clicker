@@ -8,7 +8,7 @@ import akka.actor.{Actor, Props}
 import com.zeab.kickerclicker3.app.sqlconnection.MYSQLConnection
 import com.zeab.kickerclicker3.app.sqlconnection.tables.UserTable
 
-class EastbayDropMonitor(id: String, url: String, dateTime: String) extends Actor{
+class EastbayDropMonitor(id: String, url: String, dateTime: Long) extends Actor{
 
   def receive: Receive = {
     case SpawnBuyers =>
@@ -21,7 +21,7 @@ class EastbayDropMonitor(id: String, url: String, dateTime: String) extends Acto
 
   override def preStart(): Unit = {
     val now: ZonedDateTime = ZonedDateTime.now()
-    val dropDateTime: ZonedDateTime = ZonedDateTime.parse(dateTime)
+    val dropDateTime: ZonedDateTime = ZonedDateTime.now()//ZonedDateTime.parse(dateTime)
     if (now.isBefore(dropDateTime)) {
       val timer: Timer = new Timer()
       val task: TimerTask = new TimerTask() { override def run(): Unit = { self ! SpawnBuyers } }
@@ -35,5 +35,10 @@ class EastbayDropMonitor(id: String, url: String, dateTime: String) extends Acto
   }
 
   case object SpawnBuyers
+
+  override def postRestart(reason: Throwable): Unit = {
+    println("an exception happened so lets just stop and figure out why ok :)")
+    context.stop(self)
+  }
 
 }
