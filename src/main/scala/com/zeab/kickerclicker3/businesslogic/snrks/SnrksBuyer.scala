@@ -150,7 +150,7 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
     case Refresh =>
       println("refreshing nav page because we don't know where we are")
       webDriver.navigate().refresh()
-      context.become(lookForBuyingContainer(webDriver, retryCount, refreshCount + 1))
+      context.become(lookForBuyingContainer(webDriver, 0, refreshCount + 1))
   }
 
   override def preStart(): Unit = {
