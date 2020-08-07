@@ -122,17 +122,21 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
       //Find the other possible buttons on the list
       val addToCart: Option[WebElement] = possibleSizes.find(_.getText == "ADD TO CART")
       val enterDrawing: Option[WebElement] = possibleSizes.find(_.getText == "Enter Drawing")
+      val buy: Option[WebElement] = possibleSizes.find(_.getText == "BUY")
 
       //What to do if those buttons are found so we know how to proceed
-      (addToCart, enterDrawing) match {
-        case (Some(cart: WebElement), None) =>
+      (addToCart, enterDrawing, buy) match {
+        case (Some(cart: WebElement), None, None) =>
           println("clicking add to cart")
           cart.click()
-        case (None, Some(draw: WebElement)) =>
+        case (None, Some(draw: WebElement), None) =>
           println("clicking enter drawing")
           draw.click()
-        case (None, None) =>
-          println("cant find either the add to cart or enter drawing buttons")
+        case (None, None, Some(buy: WebElement)) =>
+          println("clicking buy button")
+          buy.click()
+        case (None, None, None) =>
+          println("cant find either the add to cart or enter drawing buttons or buy buttons")
       }
       Thread.sleep(4000)
       Selenium.takeScreenshot(webDriver, screenShotDir)
