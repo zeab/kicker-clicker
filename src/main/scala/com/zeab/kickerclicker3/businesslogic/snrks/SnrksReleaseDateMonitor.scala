@@ -79,7 +79,7 @@ class SnrksReleaseDateMonitor extends Actor {
                     case Failure(_) => "can not find card link"
                     case Success(cardLink: WebElement) => cardLink.getAttribute("href")
                   }
-                DropsTable("", name, color, url, actualReleaseDate.toInstant.getEpochSecond, isWanted = true)
+                DropsTable("", name, color, url, actualReleaseDate.toInstant.toEpochMilli, isWanted = true)
               }
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()
@@ -91,10 +91,9 @@ class SnrksReleaseDateMonitor extends Actor {
               println("snrks drop found inserting")
               val id: String = UUID.randomUUID().toString
               MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, isWanted = true)
-              //context.system.actorOf(Props(classOf[SnrksDropMonitor], id, foundDrop.url, foundDrop.dateTime))
+              context.system.actorOf(Props(classOf[SnrksDropMonitor], id, foundDrop.url, foundDrop.dateTime))
             }
           }
-
           println("snrks release monitor complete sleeping for a few hours")
           context.system.scheduler.scheduleOnce(4.hours)(self ! ConnectToWebDriver)
           webDriver.quit()

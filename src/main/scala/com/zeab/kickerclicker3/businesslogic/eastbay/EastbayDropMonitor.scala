@@ -20,13 +20,13 @@ class EastbayDropMonitor(id: String, url: String, dateTime: Long) extends Actor{
   }
 
   override def preStart(): Unit = {
-    val now: ZonedDateTime = ZonedDateTime.now()
-    val dropDateTime: ZonedDateTime = ZonedDateTime.now()//ZonedDateTime.parse(dateTime)
-    if (now.isBefore(dropDateTime)) {
+    val now: Long = ZonedDateTime.now().toInstant.toEpochMilli
+    val dropDateTime: Date = new Date(dateTime)
+    if (now < dateTime) {
       val timer: Timer = new Timer()
       val task: TimerTask = new TimerTask() { override def run(): Unit = { self ! SpawnBuyers } }
       println(s"setting $url to start buying at $dropDateTime")
-      timer.schedule(task, Date.from(dropDateTime.toInstant), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS))
+      timer.schedule(task, dropDateTime, TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS))
     }
     else {
       println(s"$url has passed the drop date time stopping drop monitor")

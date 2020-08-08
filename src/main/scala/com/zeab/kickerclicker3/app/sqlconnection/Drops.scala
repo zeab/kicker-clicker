@@ -37,7 +37,7 @@ trait Drops {
 
   def insertDrop(id: String, name: String, color: String, url: String, dateTime: Long, isWanted: Boolean): Unit = {
     val removeBadCharsFromName: String = name.replace("'", "")
-    mySqlConnection.createStatement().executeUpdate(s"INSERT INTO kicker.drops (id, name, color, url, dateTime, isWanted) VALUES ('$id', '$removeBadCharsFromName', '$color', '$url', $dateTime, '$isWanted');") match {
+    mySqlConnection.createStatement().executeUpdate(s"INSERT INTO kicker.drops (id, name, color, url, dateTime, isWanted) VALUES ('$id', '$removeBadCharsFromName', '$color', '$url', $dateTime, $isWanted);") match {
       case 1 => println("the sql drop insert was successful")
       case _ => println("the drop sql insert does not seem to have been successful")
     }

@@ -68,7 +68,7 @@ class EastbayReleaseDateMonitor extends Actor {
                 val actualReleaseDate: ZonedDateTime = localDate.atTime(7, 0).atZone( ZoneId.of("America/Los_Angeles"))
                 val name: String = text(1)
                 val color: String = text(2)
-                DropsTable("", name, color, url, actualReleaseDate.toInstant.getEpochSecond, isWanted = true)
+                DropsTable("", name, color, url, actualReleaseDate.toInstant.toEpochMilli, isWanted = true)
               }
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()

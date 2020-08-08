@@ -1,7 +1,7 @@
 package com.zeab.kickerclicker3.businesslogic.adidas
 
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, ZoneId, ZonedDateTime}
+import java.time.{LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
 import java.util
 import java.util.{Locale, UUID}
 
@@ -19,6 +19,9 @@ import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success, Try}
 import java.text.DateFormatSymbols
 class AdidasReleaseDateMonitor extends Actor {
+
+  val dfs = new DateFormatSymbols
+  val weekdays = dfs.getWeekdays.filterNot(_ == "").toList
 
   implicit val ec: ExecutionContext = context.system.dispatcher
 
@@ -57,81 +60,80 @@ class AdidasReleaseDateMonitor extends Actor {
           context.system.stop(self)
         case Success(productCards: util.List[WebElement]) =>
 
-          val ff =
-            productCards.asScala.toList.map{ card =>
-              Try(card.findElement(By.xpath(s".//div[contains(@class,'gl-product-card')]"))) match {
+          val foundDrops =
+            productCards.asScala.toList.map{ productCard: WebElement =>
+              Try(productCard.findElement(By.xpath(s".//div[contains(@class,'gl-product-card')]"))) match {
                 case Failure(exception) =>
                   println(exception.toString)
-                  ("", "")
-                case Success(innerCard) =>
-                  val dfs = new DateFormatSymbols
-                  val weekdays = dfs.getWeekdays.map(_.toLowerCase()).filterNot(_ == "").toList
-                  val text = innerCard.getText.split('\n').map(_.toLowerCase()).toList
-                  val releaseDate = text.find(s => weekdays.exists(s.contains)).getOrElse("")
-                  val gg: String =
-                  Try(innerCard.findElement(By.xpath(".//a"))) match {
+                  DropsTable("", "", "", "", 0, isWanted = false)
+                case Success(innerProductCard: WebElement) =>
+
+                  val releaseDate1 =
+                    innerProductCard.getText.split('\n').toList
+                      .find(s => weekdays.map(_.toUpperCase).exists(s.contains)).getOrElse("")
+                      .map(_.toLower)
+                      .split(' ')
+                      .map{s =>
+                        if (s == "") ""
+                        else s.charAt(0).toUpper + s.substring(1)
+                      }
+                      .map{s =>
+                        if (s == "Am") "AM"
+                        else if (s =="Pm") "PM"
+                        else s
+                      }
+                      .map{s =>
+                        if (s == "Utc") "UTC"
+                        else s
+                      }
+                      .map{s =>
+                        if (s.contains(':'))
+                          if (s.length == 4) "0" + s
+                          else s
+                        else s
+                      }
+                      .mkString(" ")
+
+                  if (releaseDate1 == "") ""
+                  else {
+                    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE d MMM HH:mm a Z", Locale.US)
+                    val localDate: ZonedDateTime = ZonedDateTime.parse(releaseDate1, formatter)
+                    println()
+                  }
+
+                  val releaseDate = ZonedDateTime.now().toInstant.toEpochMilli
+                  Try(innerProductCard.findElement(By.xpath(".//a"))) match {
                     case Failure(exception) =>
-                      "cant find url"
-                    case Success(value) =>
-                      val kk = value.getAttribute("href")
-                      val oo = value.getText
-                      kk
+                      println(exception.toString)
+                      DropsTable("", "", "", "", 0, isWanted = false)
+                    case Success(cardInfo) =>
+                      val url = cardInfo.getAttribute("href")
+                      DropsTable("", "", "", url, releaseDate, isWanted = true)
                   }
-                  (gg, releaseDate)
               }
-            }
-
-          val ttt = ff.filterNot(_._2 == "")
-
-          println()
-
-          val jj = productCards.asScala.toList
-            .filterNot(_.getText == "")
-
-          val kk = jj.map(_.getText)
-
-          println()
-          val foundDrops: List[DropsTable] =
-            productCards.asScala.toList
-              .filterNot(_.getText == "")
-              .map { productCard: WebElement =>
-                val text: Array[String] = productCard.getText.split("\n")
-                val month: String = text(0).toLowerCase()
-                val date: String = month.charAt(0).toUpper + month.substring(1) + " " + text(1)
-                val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d yyyy", Locale.US)
-                val localDate: LocalDate = LocalDate.parse(date + " 2020", formatter)
-                val actualReleaseDate: ZonedDateTime = localDate.atTime(7, 0).atZone(ZoneId.of("America/Los_Angeles"))
-                val name: String = text(2)
-                val color: String = text(3)
-                val url: String =
-                  Try(productCard.findElement(By.xpath(s".//a[contains(@class,'card-link')]"))) match {
-                    case Failure(_) => "can not find card link"
-                    case Success(cardLink: WebElement) => cardLink.getAttribute("href")
-                  }
-                DropsTable("", name, color, url, actualReleaseDate.toInstant.getEpochSecond, isWanted = true)
-              }
+            }.filterNot(_.url == "")
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()
 
           foundDrops.foreach { foundDrop: DropsTable =>
             if (knownDrops.exists(_.url == foundDrop.url))
-              println("snrks drop is already found so skipping insert")
+              println("adidas drop is already found so skipping insert")
             else {
-              println("snrks drop found inserting")
+              println("adidas drop found inserting")
               val id: String = UUID.randomUUID().toString
               MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, isWanted = true)
               //context.system.actorOf(Props(classOf[SnrksDropMonitor], id, foundDrop.url, foundDrop.dateTime))
             }
           }
 
-          println("snrks release monitor complete sleeping for a few hours")
+          println("adidas release monitor complete sleeping for a few hours")
           context.system.scheduler.scheduleOnce(4.hours)(self ! ConnectToWebDriver)
           webDriver.quit()
       }
   }
 
   override def preStart(): Unit = {
-    println("snrks release date monitor starting")
+    println("adidas release date monitor starting")
     self ! ConnectToWebDriver
   }
 
