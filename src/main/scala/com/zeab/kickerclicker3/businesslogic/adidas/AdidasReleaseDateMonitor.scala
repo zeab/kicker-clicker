@@ -1,9 +1,10 @@
 package com.zeab.kickerclicker3.businesslogic.adidas
 
+import java.util.Calendar
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
 import java.util
-import java.util.{Locale, UUID}
+import java.util.{Date, Locale, UUID}
 
 import akka.actor.{Actor, Props}
 import com.zeab.kickerclicker3.app.appconf.AppConf
@@ -68,6 +69,8 @@ class AdidasReleaseDateMonitor extends Actor {
                   DropsTable("", "", "", "", 0, isWanted = false)
                 case Success(innerProductCard: WebElement) =>
 
+                  val cal = Calendar.getInstance
+                  val year = cal.get(Calendar.YEAR)
                   val releaseDate1 =
                     innerProductCard.getText.split('\n').toList
                       .find(s => weekdays.map(_.toUpperCase).exists(s.contains)).getOrElse("")
@@ -92,23 +95,23 @@ class AdidasReleaseDateMonitor extends Actor {
                           else s
                         else s
                       }
-                      .mkString(" ")
+                      .mkString(" ") + s" $year"
 
-                  if (releaseDate1 == "") ""
-                  else {
-                    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE d MMM HH:mm a Z", Locale.US)
-                    val localDate: ZonedDateTime = ZonedDateTime.parse(releaseDate1, formatter)
-                    println()
-                  }
+                  val realReleaseDate =
+                    if (releaseDate1 == "") 0
+                    else {
+                      val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE d MMM hh:mm a z yyyy", Locale.US)
+                      val localDate = ZonedDateTime.parse(releaseDate1, formatter).toInstant.toEpochMilli
+                      localDate
+                    }
 
-                  val releaseDate = ZonedDateTime.now().toInstant.toEpochMilli
                   Try(innerProductCard.findElement(By.xpath(".//a"))) match {
                     case Failure(exception) =>
                       println(exception.toString)
                       DropsTable("", "", "", "", 0, isWanted = false)
                     case Success(cardInfo) =>
                       val url = cardInfo.getAttribute("href")
-                      DropsTable("", "", "", url, releaseDate, isWanted = true)
+                      DropsTable("", "", "", url, realReleaseDate, isWanted = true)
                   }
               }
             }.filterNot(_.url == "")

@@ -26,14 +26,14 @@ object KickerClicker3 extends App {
   implicit val ec: ExecutionContext = system.dispatcher
 
   //Start release date monitors
-  val snrksReleaseDateMonitor: ActorRef =
-    system.actorOf(Props(classOf[SnrksReleaseDateMonitor]), "snrks-release-date-monitor")
-  val eastbayReleaseDateMonitor: ActorRef =
-    system.actorOf(Props(classOf[EastbayReleaseDateMonitor]), "eastbay-release-date-monitor")
+//  val snrksReleaseDateMonitor: ActorRef =
+//    system.actorOf(Props(classOf[SnrksReleaseDateMonitor]), "snrks-release-date-monitor")
+//  val eastbayReleaseDateMonitor: ActorRef =
+//    system.actorOf(Props(classOf[EastbayReleaseDateMonitor]), "eastbay-release-date-monitor")
 //  val bodegaReleaseDateMonitor: ActorRef =
 //    system.actorOf(Props(classOf[BodegaReleaseDateMonitor]), "bodega-release-date-monitor")
-//    val adidasReleaseDateMonitor: ActorRef =
-//      system.actorOf(Props(classOf[AdidasReleaseDateMonitor]), "adidas-release-date-monitor")
+    val adidasReleaseDateMonitor: ActorRef =
+      system.actorOf(Props(classOf[AdidasReleaseDateMonitor]), "adidas-release-date-monitor")
 
   //Start up all the drop monitors based off known upcoming drops
   MYSQLConnection.selectDrops().foreach{

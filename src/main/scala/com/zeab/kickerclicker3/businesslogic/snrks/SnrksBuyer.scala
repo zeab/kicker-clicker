@@ -112,7 +112,18 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
   def lookForAvailableSizes(possibleSizes: List[WebElement], webDriver: RemoteWebDriver, retryCount: Int, refreshCount: Int): Receive = {
     case LookForAvailableSizes =>
       //Find all the valid sizes
-      val availableSizes: List[WebElement] = possibleSizes.filter((button: WebElement) => button.isEnabled).filterNot(_.getText == "ADD TO CART").filterNot(_.getText.contains("Enter Drawing")).filterNot(_.getText.contains("BUY"))
+      val availableSizes: List[WebElement] =
+        possibleSizes.filter((button: WebElement) => button.isEnabled)
+          .filterNot(_.getText == "ADD TO CART")
+          .filterNot(_.getText.contains("Enter Drawing"))
+          .filterNot(_.getText.contains("BUY"))
+          .filterNot(_.getText.contains("Buy"))
+          .filterNot(_.getText.contains("buy"))
+
+      //remove this once i figure it out... or just move it to a debug statement
+      println("all the size buttons")
+      println(possibleSizes.map(_.getText).mkString("", " | ", ""))
+
       //Pick and click on the top size
       val selectedSize: WebElement = ThreadLocalRandom.getRandomItemFromCollection(availableSizes)
       println(s"clicking size: ${selectedSize.getText}")
@@ -123,17 +134,25 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
       val addToCart: Option[WebElement] = possibleSizes.find(_.getText == "ADD TO CART")
       val enterDrawing: Option[WebElement] = possibleSizes.find(_.getText == "Enter Drawing")
       val buy: Option[WebElement] = possibleSizes.find(_.getText == "BUY")
+      val buy1: Option[WebElement] = possibleSizes.find(_.getText == "Buy")
+      val buy2: Option[WebElement] = possibleSizes.find(_.getText == "buy")
 
       //What to do if those buttons are found so we know how to proceed
-      (addToCart, enterDrawing, buy) match {
-        case (Some(cart: WebElement), None, None) =>
+      (addToCart, enterDrawing, buy, buy1, buy2) match {
+        case (Some(cart: WebElement), None, None, None, None) =>
           println("clicking add to cart")
           cart.click()
-        case (None, Some(draw: WebElement), None) =>
+        case (None, Some(draw: WebElement), None, None, None) =>
           println("clicking enter drawing")
           draw.click()
-        case (None, None, Some(buy: WebElement)) =>
+        case (None, None, Some(buy: WebElement), None, None) =>
           println("clicking buy button")
+          buy.click()
+        case (None, None, None, Some(buy: WebElement), None) =>
+          println("clicking buy1 button")
+          buy.click()
+        case (None, None, None, None, Some(buy: WebElement)) =>
+          println("clicking buy2 button")
           buy.click()
         case _ =>
           println("cant find either the add to cart or enter drawing buttons or buy buttons")
