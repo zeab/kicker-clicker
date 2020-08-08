@@ -1,12 +1,12 @@
 package com.zeab.kickerclicker3.businesslogic.adidas
 
-import java.util.Calendar
+import java.text.DateFormatSymbols
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, LocalDateTime, ZoneId, ZonedDateTime}
 import java.util
-import java.util.{Date, Locale, UUID}
+import java.util.{Calendar, Locale, UUID}
 
-import akka.actor.{Actor, Props}
+import akka.actor.Actor
 import com.zeab.kickerclicker3.app.appconf.AppConf
 import com.zeab.kickerclicker3.app.selenium.{ConnectToWebDriver, GetUrl, Selenium}
 import com.zeab.kickerclicker3.app.sqlconnection.MYSQLConnection
@@ -18,7 +18,6 @@ import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success, Try}
-import java.text.DateFormatSymbols
 class AdidasReleaseDateMonitor extends Actor {
 
   val dfs = new DateFormatSymbols
@@ -68,7 +67,6 @@ class AdidasReleaseDateMonitor extends Actor {
                   println(exception.toString)
                   DropsTable("", "", "", "", 0, isWanted = false)
                 case Success(innerProductCard: WebElement) =>
-
                   val cal = Calendar.getInstance
                   val year = cal.get(Calendar.YEAR)
                   val releaseDate1 =
