@@ -3,7 +3,7 @@
 DRIVER_LOCATION=C:\\Users\\pyros\\Desktop\\shoes\\geckodriver.exe
 
 //run mysql
-docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD='' -d mysql:latest
+docker run --name mysql --restart unless-stopped -p 3306:3306 -e MYSQL_ROOT_PASSWORD= -d mysql:latest
 
 //Users
 SELECT * FROM `kicker`.`users`;
@@ -18,7 +18,7 @@ INSERT INTO `kicker`.`drops`  (id, name, color, url, dateTime, isWanted) VALUES 
 
 
 //run local firefox
-docker run -d -p 4440:4444 --shm-size 2g selenium/standalone-firefox:3.141.59-20200525
+docker run -d --name=firefox --restart unless-stopped -p 4440:4444 --shm-size 2g selenium/standalone-firefox:3.141.59-20200525
 
 
 
