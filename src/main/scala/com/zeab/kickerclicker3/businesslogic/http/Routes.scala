@@ -19,7 +19,7 @@ object Routes extends Directives with AutoDerivation with Marshallers with Unmar
 
   def drops: Route =
     extractActorSystem { implicit system =>
-      path("moose") {
+      path("drops") {
         get {
           parameters("id".?) { (id: Option[String]) =>
             val drops: String =
