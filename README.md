@@ -3,7 +3,7 @@
 DRIVER_LOCATION=C:\\Users\\pyros\\Desktop\\shoes\\geckodriver.exe
 
 //run mysql
-docker run --name mysql --restart unless-stopped -p 3306:3306 -e MYSQL_ROOT_PASSWORD= -d mysql:latest
+docker run --name mysql --restart unless-stopped -v /my/own/datadir:/var/lib/mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD= -d mysql:latest
 
 //Users
 SELECT * FROM `kicker`.`users`;

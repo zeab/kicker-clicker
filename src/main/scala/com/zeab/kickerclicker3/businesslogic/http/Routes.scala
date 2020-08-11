@@ -19,41 +19,50 @@ object Routes extends Directives with AutoDerivation with Marshallers with Unmar
 
   def drops: Route =
     extractActorSystem { implicit system =>
-      path("drops") {
+      path("moose") {
         get {
           parameters("id".?) { (id: Option[String]) =>
             val drops: String =
-              MYSQLConnection.selectDrops(id).map { drop: DropsTable =>
-                s"""<tr>
-                   |  <td>${drop.id}</td>
-                   |  <td>${drop.name}</td>
-                   |  <td>${drop.color}</td>
-                   |  <td><a href=${drop.url}>  Link  </a></td>
-                   |  <td>${new Date(drop.dateTime)}</td>
-                   |</tr>""".stripMargin
+              MYSQLConnection.selectDrops(id).sortBy(_.dateTime).map { drop: DropsTable =>
+                s"""<a class="card" href="${drop.url}">
+                   |  <img src="https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180" alt="card image">
+                   |  <h2>${if (drop.name == "") "undefined" else drop.name}</h2>
+                   |  <p>${if (drop.color == "") "undefined" else drop.color}</p>
+                   |  <p>${new Date(drop.dateTime)}</p>
+                   |</a>""".stripMargin
               }.mkString
-            val response: String =
+
+            val response =
               s"""<!DOCTYPE html>
                  |<html>
                  |<head>
+                 |<meta name="viewport" content="width=device-width, initial-scale=1">
                  |<style>
-                 |table, th, td {
-                 |  border: 1px solid black;
-                 |  border-collapse: collapse;
+                 |.wrapper {
+                 |  display: grid;
+                 |  grid-template-columns: repeat(3, 1fr);
+                 |  grid-gap: 10px;
+                 |  grid-auto-rows: minmax(100px, auto);
+                 |}
+                 |
+                 |@media screen and (max-width: 600px) {
+                 |  .wrapper {
+                 |    grid-template-columns: repeat(1, 1fr);
+                 |  }
+                 |}
+                 |
+                 |.card {
+                 |  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+                 |  padding: 16px;
+                 |  text-align: center;
+                 |  background-color: #f1f1f1;
                  |}
                  |</style>
                  |</head>
                  |<body>
-                 | <table style="width:100%">
-                 |  <tr>
-                 |    <th>id</th>
-                 |    <th>name</th>
-                 |    <th>color</th>
-                 |    <th>url</th>
-                 |    <th>datetime</th>
-                 |  </tr>
-                 |  $drops
-                 |</table>
+                 |<div class="wrapper">
+                 |$drops
+                 |</div>
                  |</body>
                  |</html>""".stripMargin
             complete(response)

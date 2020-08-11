@@ -58,8 +58,7 @@ object Dependencies {
     D.circeCore,
     D.circeParser,
     D.akkaHttpCirce,
-    D.scalaTest,
-    D.xml
+    D.scalaTest
   )
 
 }
