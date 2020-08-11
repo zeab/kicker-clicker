@@ -86,6 +86,7 @@ class EastbayReleaseDateMonitor extends Actor {
 
           println("eastbay release monitor complete sleeping for a few hours")
           context.system.scheduler.scheduleOnce(4.hours)(self ! ConnectToWebDriver)
+          context.become(connectToWebDriver)
           webDriver.quit()
       }
   }

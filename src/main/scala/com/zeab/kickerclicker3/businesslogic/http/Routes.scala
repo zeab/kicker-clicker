@@ -32,7 +32,7 @@ object Routes extends Directives with AutoDerivation with Marshallers with Unmar
                    |</a>""".stripMargin
               }.mkString
 
-            val response =
+            val response: String =
               s"""<!DOCTYPE html>
                  |<html>
                  |<head>

@@ -129,6 +129,7 @@ class AdidasReleaseDateMonitor extends Actor {
 
           println("adidas release monitor complete sleeping for a few hours")
           context.system.scheduler.scheduleOnce(4.hours)(self ! ConnectToWebDriver)
+          context.become(connectToWebDriver)
           webDriver.quit()
       }
   }
