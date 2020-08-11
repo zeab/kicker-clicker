@@ -2,7 +2,7 @@ package com.zeab.kickerclicker3.businesslogic.adidas
 
 import java.text.DateFormatSymbols
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
+import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
 import java.util
 import java.util.{Calendar, Locale, UUID}
 
@@ -19,9 +19,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success, Try}
 class AdidasReleaseDateMonitor extends Actor {
-
-  val dfs = new DateFormatSymbols
-  val weekdays = dfs.getWeekdays.filterNot(_ == "").toList
 
   implicit val ec: ExecutionContext = context.system.dispatcher
 
@@ -60,59 +57,26 @@ class AdidasReleaseDateMonitor extends Actor {
           context.system.stop(self)
         case Success(productCards: util.List[WebElement]) =>
 
-          val foundDrops =
+          val foundDrops: List[DropsTable] =
             productCards.asScala.toList.map{ productCard: WebElement =>
-              Try(productCard.findElement(By.xpath(s".//div[contains(@class,'gl-product-card')]"))) match {
-                case Failure(exception) =>
-                  println(exception.toString)
-                  DropsTable("", "", "", "", 0, isWanted = false)
-                case Success(innerProductCard: WebElement) =>
-                  val cal = Calendar.getInstance
-                  val year = cal.get(Calendar.YEAR)
-                  val releaseDate1 =
-                    innerProductCard.getText.split('\n').toList
-                      .find(s => weekdays.map(_.toUpperCase).exists(s.contains)).getOrElse("")
-                      .map(_.toLower)
-                      .split(' ')
-                      .map{s =>
-                        if (s == "") ""
-                        else s.charAt(0).toUpper + s.substring(1)
-                      }
-                      .map{s =>
-                        if (s == "Am") "AM"
-                        else if (s =="Pm") "PM"
-                        else s
-                      }
-                      .map{s =>
-                        if (s == "Utc") "UTC"
-                        else s
-                      }
-                      .map{s =>
-                        if (s.contains(':'))
-                          if (s.length == 4) "0" + s
-                          else s
-                        else s
-                      }
-                      .mkString(" ") + s" $year"
-
-                  val realReleaseDate =
-                    if (releaseDate1 == "") 0
-                    else {
-                      val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE d MMM hh:mm a z yyyy", Locale.US)
-                      val localDate = ZonedDateTime.parse(releaseDate1, formatter).toInstant.toEpochMilli
-                      localDate
-                    }
-
-                  Try(innerProductCard.findElement(By.xpath(".//a"))) match {
-                    case Failure(exception) =>
-                      println(exception.toString)
-                      DropsTable("", "", "", "", 0, isWanted = false)
-                    case Success(cardInfo) =>
-                      val url = cardInfo.getAttribute("href")
-                      DropsTable("", "", "", url, realReleaseDate, isWanted = true)
-                  }
+              val name: String = Try(productCard.findElement(By.xpath(s".//div[contains(@class,'plc-product-name')]"))) match {
+                case Failure(exception) => "undefined"
+                case Success(productName: WebElement) => productName.getText
               }
-            }.filterNot(_.url == "")
+              val date: String = Try(productCard.findElement(By.xpath(s".//div[contains(@class,'plc-product-date')]"))) match {
+                case Failure(exception) => "undefined"
+                case Success(productDate: WebElement) => productDate.getText
+              }
+              val formatter: DateTimeFormatter = new DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("EEEE d MMM h:mm a z yyyy").toFormatter()
+              val localDate: Long = ZonedDateTime.parse(date + " 2020", formatter).toInstant.toEpochMilli
+              val url: String =
+                Try(productCard.findElement(By.xpath(".//a"))) match {
+                  case Failure(exception) => "undefined"
+                  case Success(cardInfo) => cardInfo.getAttribute("href")
+                }
+
+              DropsTable("", name, "", url, localDate, isWanted = true)
+            }
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()
 

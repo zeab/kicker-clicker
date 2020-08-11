@@ -24,13 +24,16 @@ object Routes extends Directives with AutoDerivation with Marshallers with Unmar
           parameters("id".?) { (id: Option[String]) =>
             val drops: String =
               MYSQLConnection.selectDrops(id).sortBy(_.dateTime).map { drop: DropsTable =>
+                val x = """https://secure-images.nike.com/is/image/DotCom/CI1474_001_A_PREM?$SNKRS_COVER_WD$&amp;align=0,1"""
                 s"""<a class="card" href="${drop.url}">
-                   |  <img src="https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180" alt="card image">
+                   |  <img src="$x" alt="card image">
                    |  <h2>${if (drop.name == "") "undefined" else drop.name}</h2>
                    |  <p>${if (drop.color == "") "undefined" else drop.color}</p>
                    |  <p>${new Date(drop.dateTime)}</p>
                    |</a>""".stripMargin
               }.mkString
+
+            "https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180"
 
             val response: String =
               s"""<!DOCTYPE html>
@@ -38,6 +41,11 @@ object Routes extends Directives with AutoDerivation with Marshallers with Unmar
                  |<head>
                  |<meta name="viewport" content="width=device-width, initial-scale=1">
                  |<style>
+                 |img{
+                 |    width:100%;
+                 |    max-width:200px;
+                 |}
+                 |
                  |.wrapper {
                  |  display: grid;
                  |  grid-template-columns: repeat(3, 1fr);
