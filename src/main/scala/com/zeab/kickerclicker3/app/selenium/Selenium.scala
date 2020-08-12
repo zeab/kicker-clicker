@@ -12,13 +12,15 @@ import scala.util.Try
 
 object Selenium {
 
-  def firefox(host: String, port: String): Try[RemoteWebDriver] ={
+  def firefox(host: String, port: String, loadImages:Boolean = false): Try[RemoteWebDriver] ={
     val options: FirefoxOptions = new FirefoxOptions
     //Set for headless mode
     options.setHeadless(true)
-    //Set so we don't load images
-    options.addPreference("permissions.default.image", 2)
-    options.addPreference("dom.ipc.plugins.enabled.libflashplayer.so", "false")
+    if (!loadImages){
+      //Set so we don't load images
+      options.addPreference("permissions.default.image", 2)
+      options.addPreference("dom.ipc.plugins.enabled.libflashplayer.so", "false")
+    }
     //Set the zoom so we see the entire page
     options.addPreference("layout.css.devPixelsPerPx", "0.5")
     //Set the proxy

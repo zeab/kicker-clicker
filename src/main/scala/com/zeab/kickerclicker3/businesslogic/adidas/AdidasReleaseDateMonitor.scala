@@ -1,10 +1,9 @@
 package com.zeab.kickerclicker3.businesslogic.adidas
 
-import java.text.DateFormatSymbols
 import java.time.ZonedDateTime
 import java.time.format.{DateTimeFormatter, DateTimeFormatterBuilder}
 import java.util
-import java.util.{Calendar, Locale, UUID}
+import java.util.UUID
 
 import akka.actor.Actor
 import com.zeab.kickerclicker3.app.appconf.AppConf
@@ -28,7 +27,7 @@ class AdidasReleaseDateMonitor extends Actor {
 
   def connectToWebDriver: Receive = {
     case ConnectToWebDriver =>
-      Selenium.firefox(AppConf.seleniumRemoteDriverHost, AppConf.seleniumRemoteDriverPort) match {
+      Selenium.firefox(AppConf.seleniumRemoteDriverHost, AppConf.seleniumRemoteDriverPort, loadImages = true) match {
         case Failure(exception: Throwable) =>
           println(exception.toString)
           context.system.stop(self)
@@ -59,6 +58,7 @@ class AdidasReleaseDateMonitor extends Actor {
 
           val foundDrops: List[DropsTable] =
             productCards.asScala.toList.map{ productCard: WebElement =>
+              webDriver.executeScript("arguments[0].scrollIntoView(true);", productCard)
               val name: String = Try(productCard.findElement(By.xpath(s".//div[contains(@class,'plc-product-name')]"))) match {
                 case Failure(exception) => "undefined"
                 case Success(productName: WebElement) => productName.getText
@@ -74,8 +74,12 @@ class AdidasReleaseDateMonitor extends Actor {
                   case Failure(exception) => "undefined"
                   case Success(cardInfo) => cardInfo.getAttribute("href")
                 }
-
-              DropsTable("", name, "", url, "", localDate, isWanted = true)
+              val imageUrl: String =
+                Try(productCard.findElement(By.xpath(s".//img"))) match {
+                  case Failure(_) => "https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180"
+                  case Success(image: WebElement) => image.getAttribute("src")
+                }
+              DropsTable("", name, "", url, imageUrl, localDate, isWanted = true)
             }
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()
@@ -92,7 +96,7 @@ class AdidasReleaseDateMonitor extends Actor {
           }
 
           println("adidas release monitor complete sleeping for a few hours")
-          context.system.scheduler.scheduleOnce(4.hours)(self ! ConnectToWebDriver)
+          context.system.scheduler.scheduleOnce(4.hour)(self ! ConnectToWebDriver)
           context.become(connectToWebDriver)
           webDriver.quit()
       }

@@ -60,6 +60,7 @@ class EastbayReleaseDateMonitor extends Actor {
             productCards.asScala.toList
               .filterNot(_.getText == "")
               .map { productCard: WebElement =>
+                webDriver.executeScript("arguments[0].scrollIntoView(true);", productCard)
                 val url: String = productCard.getAttribute("href")
                 val text: Array[String] = productCard.getText.split('\n')
                 val date: String = text(0)
@@ -68,7 +69,13 @@ class EastbayReleaseDateMonitor extends Actor {
                 val actualReleaseDate: ZonedDateTime = localDate.atTime(7, 0).atZone( ZoneId.of("America/Los_Angeles"))
                 val name: String = text(1)
                 val color: String = text(2)
-                DropsTable("", name, color, url, "", actualReleaseDate.toInstant.toEpochMilli, isWanted = true)
+                val imageUrl: String =
+                  Try(productCard.findElement(By.xpath(s".//img"))) match {
+                    case Failure(_) => "https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180"
+                    case Success(image: WebElement) => image.getAttribute("src")
+                  }
+                println()
+                DropsTable("", name, color, url, imageUrl, actualReleaseDate.toInstant.toEpochMilli, isWanted = true)
               }
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()

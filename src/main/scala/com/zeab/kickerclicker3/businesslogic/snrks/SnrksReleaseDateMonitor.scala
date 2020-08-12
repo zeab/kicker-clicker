@@ -4,7 +4,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import java.util
 import java.util.{Locale, UUID}
-import org.openqa.selenium.JavascriptExecutor
+
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, OneForOneStrategy, Props, SupervisorStrategy}
 import com.zeab.kickerclicker3.app.appconf.AppConf
@@ -21,9 +21,6 @@ import scala.util.{Failure, Success, Try}
 
 class SnrksReleaseDateMonitor extends Actor {
 
-  def screenShotDir: String =
-    s"${AppConf.seleniumScreenShotDir}/stuff/${System.currentTimeMillis()}.png"
-
   implicit val ec: ExecutionContext = context.system.dispatcher
 
   val url: String = "https://www.nike.com/launch?s=upcoming"
@@ -37,7 +34,7 @@ class SnrksReleaseDateMonitor extends Actor {
 
   def connectToWebDriver: Receive = {
     case ConnectToWebDriver =>
-      Selenium.firefox(AppConf.seleniumRemoteDriverHost, AppConf.seleniumRemoteDriverPort) match {
+      Selenium.firefox(AppConf.seleniumRemoteDriverHost, AppConf.seleniumRemoteDriverPort, loadImages = true) match {
         case Failure(exception: Throwable) =>
           println(exception.toString)
           context.system.stop(self)
@@ -105,7 +102,7 @@ class SnrksReleaseDateMonitor extends Actor {
           }
           println("snrks release monitor complete sleeping for a few hours")
           context.become(connectToWebDriver)
-          context.system.scheduler.scheduleOnce(5.minute)(self ! ConnectToWebDriver)
+          context.system.scheduler.scheduleOnce(4.hour)(self ! ConnectToWebDriver)
           webDriver.quit()
       }
   }

@@ -25,10 +25,10 @@ object KickerClicker3 extends App {
   //Start release date monitors
   val snrksReleaseDateMonitor: ActorRef =
     system.actorOf(Props(classOf[SnrksReleaseDateMonitor]), "snrks-release-date-monitor")
-//  val eastbayReleaseDateMonitor: ActorRef =
-//    system.actorOf(Props(classOf[EastbayReleaseDateMonitor]), "eastbay-release-date-monitor")
-//  val adidasReleaseDateMonitor: ActorRef =
-//    system.actorOf(Props(classOf[AdidasReleaseDateMonitor]), "adidas-release-date-monitor")
+  val eastbayReleaseDateMonitor: ActorRef =
+    system.actorOf(Props(classOf[EastbayReleaseDateMonitor]), "eastbay-release-date-monitor")
+  val adidasReleaseDateMonitor: ActorRef =
+    system.actorOf(Props(classOf[AdidasReleaseDateMonitor]), "adidas-release-date-monitor")
   //  val bodegaReleaseDateMonitor: ActorRef =
   //    system.actorOf(Props(classOf[BodegaReleaseDateMonitor]), "bodega-release-date-monitor")
 
