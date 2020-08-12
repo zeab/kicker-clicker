@@ -74,7 +74,6 @@ class EastbayReleaseDateMonitor extends Actor {
                     case Failure(_) => "https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180"
                     case Success(image: WebElement) => image.getAttribute("src")
                   }
-                println()
                 DropsTable("", name, color, url, imageUrl, actualReleaseDate.toInstant.toEpochMilli, isWanted = true)
               }
 
