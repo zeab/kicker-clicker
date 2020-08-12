@@ -16,15 +16,8 @@ CREATE TABLE `kicker`.`drops` (id VARCHAR(36), name VARCHAR(200), color VARCHAR(
 DROP TABLE `kicker`.`drops`;
 INSERT INTO `kicker`.`drops`  (id, name, color, url, image_url date_time, is_wanted) VALUES ('', '', '', '', '', , );
 
-
 //run local firefox
 docker run -d --name=firefox --restart unless-stopped -p 4440:4444 --shm-size 2g selenium/standalone-firefox:3.141.59-20200525
-
-
-
-CREATE TABLE `kicker`.`drops` (id VARCHAR(50), name VARCHAR(200), color VARCHAR(200), url VARCHAR(250), dateTime VARCHAR(100), wanted VARCHAR(2));
-
-
 
 
 
