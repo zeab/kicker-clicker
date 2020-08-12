@@ -75,7 +75,7 @@ class AdidasReleaseDateMonitor extends Actor {
                   case Success(cardInfo) => cardInfo.getAttribute("href")
                 }
 
-              DropsTable("", name, "", url, localDate, isWanted = true)
+              DropsTable("", name, "", url, "", localDate, isWanted = true)
             }
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()
@@ -86,7 +86,7 @@ class AdidasReleaseDateMonitor extends Actor {
             else {
               println("adidas drop found inserting")
               val id: String = UUID.randomUUID().toString
-              MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, isWanted = true)
+              MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.imageUrl, foundDrop.dateTime, isWanted = true)
               //context.system.actorOf(Props(classOf[SnrksDropMonitor], id, foundDrop.url, foundDrop.dateTime))
             }
           }

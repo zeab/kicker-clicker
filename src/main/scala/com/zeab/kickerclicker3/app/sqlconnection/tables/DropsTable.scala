@@ -5,6 +5,7 @@ case class DropsTable(
                        name: String,
                        color: String,
                        url: String,
+                       imageUrl: String,
                        dateTime: Long,
                        isWanted: Boolean
                      )

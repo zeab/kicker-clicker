@@ -68,7 +68,7 @@ class EastbayReleaseDateMonitor extends Actor {
                 val actualReleaseDate: ZonedDateTime = localDate.atTime(7, 0).atZone( ZoneId.of("America/Los_Angeles"))
                 val name: String = text(1)
                 val color: String = text(2)
-                DropsTable("", name, color, url, actualReleaseDate.toInstant.toEpochMilli, isWanted = true)
+                DropsTable("", name, color, url, "", actualReleaseDate.toInstant.toEpochMilli, isWanted = true)
               }
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()
@@ -79,7 +79,7 @@ class EastbayReleaseDateMonitor extends Actor {
             else {
               println("eastbay drop found inserting")
               val id: String = UUID.randomUUID().toString
-              MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, isWanted = true)
+              MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.imageUrl, foundDrop.dateTime, isWanted = true)
               context.system.actorOf(Props(classOf[EastbayDropMonitor], id, foundDrop.url, foundDrop.dateTime))
             }
           }

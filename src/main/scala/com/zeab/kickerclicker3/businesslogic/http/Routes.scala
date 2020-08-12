@@ -24,16 +24,13 @@ object Routes extends Directives with AutoDerivation with Marshallers with Unmar
           parameters("id".?) { (id: Option[String]) =>
             val drops: String =
               MYSQLConnection.selectDrops(id).sortBy(_.dateTime).map { drop: DropsTable =>
-                val x = """https://secure-images.nike.com/is/image/DotCom/CI1474_001_A_PREM?$SNKRS_COVER_WD$&amp;align=0,1"""
                 s"""<a class="card" href="${drop.url}">
-                   |  <img src="$x" alt="card image">
+                   |  <img src="${drop.imageUrl}" alt="card image">
                    |  <h2>${if (drop.name == "") "undefined" else drop.name}</h2>
                    |  <p>${if (drop.color == "") "undefined" else drop.color}</p>
                    |  <p>${new Date(drop.dateTime)}</p>
                    |</a>""".stripMargin
               }.mkString
-
-            "https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180"
 
             val response: String =
               s"""<!DOCTYPE html>
@@ -42,8 +39,8 @@ object Routes extends Directives with AutoDerivation with Marshallers with Unmar
                  |<meta name="viewport" content="width=device-width, initial-scale=1">
                  |<style>
                  |img{
-                 |    width:100%;
-                 |    max-width:200px;
+                 |  width:100%;
+                 |  max-width:200px;
                  |}
                  |
                  |.wrapper {
@@ -63,7 +60,7 @@ object Routes extends Directives with AutoDerivation with Marshallers with Unmar
                  |  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
                  |  padding: 16px;
                  |  text-align: center;
-                 |  background-color: #f1f1f1;
+                 |
                  |}
                  |</style>
                  |</head>
@@ -81,7 +78,7 @@ object Routes extends Directives with AutoDerivation with Marshallers with Unmar
               entity(as[PostDropRequest]) { drop: PostDropRequest =>
                 val id: String = UUID.randomUUID().toString
                 val dropDateTime: Long = ZonedDateTime.parse(drop.dateTime).toInstant.toEpochMilli
-                MYSQLConnection.insertDrop(id, drop.name, drop.color, drop.url, dropDateTime, isWanted = true)
+                MYSQLConnection.insertDrop(id, drop.name, drop.color, drop.url, drop.imageUrl, dropDateTime, drop.isWanted)
                 drop match {
                   case drop if drop.url.contains("www.nike.com") =>
                     system.actorOf(Props(classOf[SnrksDropMonitor], id, drop.url, dropDateTime))

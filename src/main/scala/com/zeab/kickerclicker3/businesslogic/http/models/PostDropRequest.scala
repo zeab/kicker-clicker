@@ -4,5 +4,7 @@ case class PostDropRequest(
                             name: String,
                             color: String,
                             url: String,
-                            dateTime: String
+                            imageUrl: String,
+                            dateTime: String,
+                            isWanted: Boolean
                           )

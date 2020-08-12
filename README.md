@@ -12,9 +12,9 @@ INSERT INTO `kicker`.`users`  (id, email, password, cv) VALUES ('', '', '', '');
 
 //Drops
 SELECT * FROM `kicker`.`drops`;
-CREATE TABLE `kicker`.`drops` (id VARCHAR(36), name VARCHAR(200), color VARCHAR(100), url VARCHAR(250), dateTime Long, isWanted boolean);
+CREATE TABLE `kicker`.`drops` (id VARCHAR(36), name VARCHAR(200), color VARCHAR(100), url VARCHAR(250), image_url VARCHAR(250), date_time Long, is_wanted boolean);
 DROP TABLE `kicker`.`drops`;
-INSERT INTO `kicker`.`drops`  (id, name, color, url, dateTime, isWanted) VALUES ('', '', '', '', '', , );
+INSERT INTO `kicker`.`drops`  (id, name, color, url, image_url date_time, is_wanted) VALUES ('', '', '', '', '', , );
 
 
 //run local firefox

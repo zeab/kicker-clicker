@@ -4,7 +4,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, ZoneId, ZonedDateTime}
 import java.util
 import java.util.{Locale, UUID}
-
+import org.openqa.selenium.JavascriptExecutor
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, OneForOneStrategy, Props, SupervisorStrategy}
 import com.zeab.kickerclicker3.app.appconf.AppConf
@@ -20,6 +20,9 @@ import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success, Try}
 
 class SnrksReleaseDateMonitor extends Actor {
+
+  def screenShotDir: String =
+    s"${AppConf.seleniumScreenShotDir}/stuff/${System.currentTimeMillis()}.png"
 
   implicit val ec: ExecutionContext = context.system.dispatcher
 
@@ -66,6 +69,7 @@ class SnrksReleaseDateMonitor extends Actor {
             productCards.asScala.toList
               .filterNot(_.getText == "")
               .map { productCard: WebElement =>
+                webDriver.executeScript("arguments[0].scrollIntoView(true);", productCard)
                 val text: Array[String] = productCard.getText.split("\n")
                 val month: String = text(0).toLowerCase()
                 val date: String = month.charAt(0).toUpper + month.substring(1) + " " + text(1)
@@ -79,7 +83,12 @@ class SnrksReleaseDateMonitor extends Actor {
                     case Failure(_) => "can not find card link"
                     case Success(cardLink: WebElement) => cardLink.getAttribute("href")
                   }
-                DropsTable("", name, color, url, actualReleaseDate.toInstant.toEpochMilli, isWanted = true)
+                val imageUrl: String =
+                  Try(productCard.findElement(By.xpath(s".//img"))) match {
+                    case Failure(_) => "https://placeholdit.imgix.net/~text?txtsize=33&txt=318%C3%97180&w=318&h=180"
+                    case Success(image: WebElement) => image.getAttribute("src")
+                  }
+                DropsTable("", name, color, url, imageUrl, actualReleaseDate.toInstant.toEpochMilli, isWanted = true)
               }
 
           val knownDrops: List[DropsTable] = MYSQLConnection.selectDrops()
@@ -90,13 +99,13 @@ class SnrksReleaseDateMonitor extends Actor {
             else {
               println("snrks drop found inserting")
               val id: String = UUID.randomUUID().toString
-              MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.dateTime, isWanted = true)
+              MYSQLConnection.insertDrop(id, foundDrop.name, foundDrop.color, foundDrop.url, foundDrop.imageUrl, foundDrop.dateTime, isWanted = true)
               context.system.actorOf(Props(classOf[SnrksDropMonitor], id, foundDrop.url, foundDrop.dateTime))
             }
           }
           println("snrks release monitor complete sleeping for a few hours")
           context.become(connectToWebDriver)
-          context.system.scheduler.scheduleOnce(4.hours)(self ! ConnectToWebDriver)
+          context.system.scheduler.scheduleOnce(5.minute)(self ! ConnectToWebDriver)
           webDriver.quit()
       }
   }
