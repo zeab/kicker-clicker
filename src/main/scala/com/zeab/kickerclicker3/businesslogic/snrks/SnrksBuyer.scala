@@ -117,8 +117,6 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
           .filterNot(_.getText == "ADD TO CART")
           .filterNot(_.getText.contains("Enter Drawing"))
           .filterNot(_.getText.contains("BUY"))
-          .filterNot(_.getText.contains("Buy"))
-          .filterNot(_.getText.contains("buy"))
 
       //remove this once i figure it out... or just move it to a debug statement
       println("all the size buttons")
@@ -131,28 +129,20 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
       Selenium.takeScreenshot(webDriver, screenShotDir)
 
       //Find the other possible buttons on the list
-      val addToCart: Option[WebElement] = possibleSizes.find(_.getText == "ADD TO CART")
-      val enterDrawing: Option[WebElement] = possibleSizes.find(_.getText == "Enter Drawing")
-      val buy: Option[WebElement] = possibleSizes.find(_.getText == "BUY")
-      val buy1: Option[WebElement] = possibleSizes.find(_.getText == "Buy")
-      val buy2: Option[WebElement] = possibleSizes.find(_.getText == "buy")
+      val addToCart: Option[WebElement] = possibleSizes.find(_.getText.contains("ADD TO CART"))
+      val enterDrawing: Option[WebElement] = possibleSizes.find(_.getText.contains("Enter Drawing"))
+      val buy: Option[WebElement] = possibleSizes.find(_.getText.contains("BUY"))
 
       //What to do if those buttons are found so we know how to proceed
-      (addToCart, enterDrawing, buy, buy1, buy2) match {
-        case (Some(cart: WebElement), None, None, None, None) =>
+      (addToCart, enterDrawing, buy) match {
+        case (Some(cart: WebElement), None, None) =>
           println("clicking add to cart")
           cart.click()
-        case (None, Some(draw: WebElement), None, None, None) =>
+        case (None, Some(draw: WebElement), None) =>
           println("clicking enter drawing")
           draw.click()
-        case (None, None, Some(buy: WebElement), None, None) =>
+        case (None, None, Some(buy: WebElement)) =>
           println("clicking buy button")
-          buy.click()
-        case (None, None, None, Some(buy: WebElement), None) =>
-          println("clicking buy1 button")
-          buy.click()
-        case (None, None, None, None, Some(buy: WebElement)) =>
-          println("clicking buy2 button")
           buy.click()
         case _ =>
           println("cant find either the add to cart or enter drawing buttons or buy buttons")
