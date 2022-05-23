@@ -155,14 +155,6 @@ class SnrksBuyer(id: String, url: String, email: String, password: String, cv: S
       }
   }
 
-  def lookForEnterDrawing(webDriver: RemoteWebDriver): Receive = {
-    case _ =>
-  }
-
-  def lookForAddToCart(webDriver: RemoteWebDriver): Receive = {
-    case _ =>
-  }
-
   def refresh(webDriver: RemoteWebDriver, retryCount: Int, refreshCount: Int): Receive ={
     case Refresh =>
       println("refreshing nav page because we don't know where we are")
